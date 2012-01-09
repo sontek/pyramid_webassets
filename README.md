@@ -3,12 +3,12 @@ Configuration
 You are required to set base_dir and base_url, the rest are optional,
 but we currently support:
 
-base_dir: The directory to output and search for assets
-base_url: The url static assets will be located
-debug: If webassets should be in debug mode (i.e no compression)
-updater: Different update configurations (i.e always, timestamp)
-cache: If we should use webassets cache
-jst_compiler: A custom jst compiler, by defalut it uses underscore
+ * base_dir: The directory to output and search for assets
+ * base_url: The url static assets will be located
+ * debug: If webassets should be in debug mode (i.e no compression)
+ * updater: Different update configurations (i.e always, timestamp)
+ * cache: If we should use webassets cache
+ * jst_compiler: A custom jst compiler, by defalut it uses underscore
 
 ``` python
 webassets.base_dir=%(here)s/app/static
