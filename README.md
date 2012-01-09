@@ -44,8 +44,8 @@ Extras
 ====================
 There are a few utility methods you can use:
 
-get_webassets_env_from_settings(settings, prefix='webassets'): Pass it a dictionary of your settings and an
-option keyword argument of the prefix in your configuration and it will return you a webassets environment.
+get_webassets_env_from_settings(settings, prefix='static_assets'): Pass it a dictionary of your settings and an
+optional keyword argument of the prefix in your configuration and it will return you a webassets environment.
 
 get_webassets_env(request or config): This will pull the environment out of the registry, you can use either
 a configurator object or a request.
