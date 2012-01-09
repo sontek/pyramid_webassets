@@ -1,3 +1,6 @@
 pyramid
 webassets
 zope.interface
+pytest
+pytest-cov
+mock

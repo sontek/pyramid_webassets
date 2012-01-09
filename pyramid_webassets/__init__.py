@@ -5,7 +5,7 @@ from webassets import Environment
 class IWebAssetsEnvironment(Interface):
     pass
 
-def add_web_asset(config, name, bundle):
+def add_webasset(config, name, bundle):
     asset_env = get_webassets_env(config)
     asset_env.register(name, bundle)
 
@@ -51,5 +51,5 @@ def includeme(config):
 
     config.registry.registerUtility(assets_env, IWebAssetsEnvironment)
 
-    config.add_directive('add_webasset', add_web_asset)
+    config.add_directive('add_webasset', add_webasset)
     config.add_directive('get_webassets_env', get_webassets_env)
