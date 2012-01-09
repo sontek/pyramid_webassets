@@ -12,9 +12,7 @@ def add_web_asset(config, name, bundle):
 def get_webassets_env(config):
     return config.registry.queryUtility(IWebAssetsEnvironment)
 
-def get_webassets_env_from_config(config, prefix='webassets'):
-    settings = config.registry.settings
-
+def get_webassets_env_from_settings(settings, prefix='webassets'):
     def base_name(string):
         return '%s.%s' % (prefix, string)
 
@@ -40,7 +38,7 @@ def get_webassets_env_from_config(config, prefix='webassets'):
 
     if base_name('updater') in settings:
         kwargs['updater'] = settings.get(base_name('updater'))
-    
+
     if base_name('jst_compiler') in settings:
         kwargs['JST_COMPILER'] = settings.get(base_name('jst_compiler'))
 
@@ -49,7 +47,7 @@ def get_webassets_env_from_config(config, prefix='webassets'):
     return assets_env
 
 def includeme(config):
-    assets_env = get_webassets_env_from_config(config)
+    assets_env = get_webassets_env_from_settings(config.registry.settings)
 
     config.registry.registerUtility(assets_env, IWebAssetsEnvironment)
 
