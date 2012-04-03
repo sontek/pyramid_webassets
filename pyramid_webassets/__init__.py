@@ -2,49 +2,68 @@ from pyramid.settings import asbool
 from zope.interface import Interface
 from webassets import Environment
 
+
 class IWebAssetsEnvironment(Interface):
     pass
+
 
 def add_webasset(config, name, bundle):
     asset_env = get_webassets_env(config)
     asset_env.register(name, bundle)
 
+
 def get_webassets_env(config):
     return config.registry.queryUtility(IWebAssetsEnvironment)
 
-def get_webassets_env_from_settings(settings, prefix='webassets'):
-    def base_name(string):
-        return '%s.%s' % (prefix, string)
 
-    if not base_name('base_dir')  in settings:
+def get_webassets_env_from_settings(settings, prefix='webassets'):
+    """This function will take all webassets.* parameteres, and
+    call the ``Environment()`` constructor with kwargs passed in.
+
+    The only two parameters that are not passed as keywords are:
+
+    * base_dir
+    * base_url
+
+    which are passed in positionally.
+
+    Read the ``WebAssets`` docs for ``Environment`` for more details.
+    """
+    # Make a dictionary of the webassets.* elements...
+    kwargs = {}   # assets settings
+    cut_prefix = len(prefix) + 1
+    for k in settings:
+        if k.startswith(prefix):
+            kwargs[k[cut_prefix:]] = settings[k]
+
+    if 'base_dir' not in kwargs:
         raise Exception("You need to provide webassets.base_dir in your configuration")
-    if not base_name('base_url') in settings:
+    if 'base_url' not in kwargs:
         raise Exception("You need to provide webassets.base_url in your configuration")
 
-    asset_dir = settings.get(base_name('base_dir'))
-    asset_url = settings.get(base_name('base_url'))
-    kwargs = {}
+    asset_dir = kwargs.pop('base_dir')
+    asset_url = kwargs.pop('base_url')
 
-    if base_name('debug') in settings:
-        dbg = settings.get(base_name('debug')).lower()
+    if 'debug' in kwargs:
+        dbg = kwargs['debug'].lower()
 
         if dbg == 'false' or dbg == 'true':
             dbg = asbool(dbg)
 
-        kwargs['debug']  = dbg
+        kwargs['debug'] = dbg
 
-    if base_name('cache') in settings:
-        kwargs['cache'] = asbool(settings.get(base_name('cache')))
+    if 'cache' in kwargs:
+        kwargs['cache'] = asbool(kwargs['cache'])
 
-    if base_name('updater') in settings:
-        kwargs['updater'] = settings.get(base_name('updater'))
+    # 'updater' is just passed in...
 
-    if base_name('jst_compiler') in settings:
-        kwargs['JST_COMPILER'] = settings.get(base_name('jst_compiler'))
+    if 'jst_compiler' in kwargs:
+        kwargs['JST_COMPILER'] = kwargs.pop('jst_compiler')
 
     assets_env = Environment(asset_dir, asset_url, **kwargs)
 
     return assets_env
+
 
 def includeme(config):
     assets_env = get_webassets_env_from_settings(config.registry.settings)
