@@ -1,6 +1,7 @@
-import unittest
+import unittest2
 from mock import Mock
-class TestWebAssets(unittest.TestCase):
+
+class TestWebAssets(unittest2.TestCase):
     def test_asset_interface(self):
         from pyramid_webassets import IWebAssetsEnvironment
 

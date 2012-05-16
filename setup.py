@@ -49,7 +49,7 @@ setup(name='pyramid_webassets',
       zip_safe=False,
       test_suite='pyramid_webassets',
       install_requires = requires,
-      test_requires = ['pytest', 'mock'],
+      test_requires = ['pytest', 'mock', 'unittest2'],
       cmdclass = {'test': PyTest},
       paster_plugins=['pyramid'],
       )
