@@ -1,6 +1,10 @@
-import unittest
+import unittest2
 from mock import Mock
-class TestWebAssets(unittest.TestCase):
+from pyramid import testing
+from webassets.test import TempDirHelper
+
+
+class TestWebAssets(unittest2.TestCase):
     def test_asset_interface(self):
         from pyramid_webassets import IWebAssetsEnvironment
 
@@ -171,3 +175,130 @@ class TestWebAssets(unittest.TestCase):
         expected2 = ('get_webassets_env', get_webassets_env)
         assert add_directive.call_args_list[0][0] == expected1
         assert add_directive.call_args_list[1][0] == expected2
+
+
+class TestAssetSpecs(TempDirHelper, unittest2.TestCase):
+    # Mask the methods from TempDirHelper, pytest will try to call them without
+    # instantiating the class...
+    setup = None
+    teardown = None
+
+    def setUp(self):
+        from pyramid_webassets import get_webassets_env
+
+        TempDirHelper.setup(self)
+
+        self.request = testing.DummyRequest()
+        self.config = testing.setUp(request=self.request, settings={
+                'webassets.base_url': '/static',
+                'webassets.base_dir': self.tempdir+'/static'})
+        self.config.include('pyramid_webassets')
+
+        self.env = get_webassets_env(self.config)
+        # Disable cache busting
+        self.env.url_expire = False
+
+        import sys
+        sys.path.append(self.tempdir)
+
+    def tearDown(self):
+        TempDirHelper.teardown(self)
+        testing.tearDown()
+
+        import sys
+        # remove tempdir path elements
+        for pth in sys.path:
+            if pth.startswith(self.tempdir):
+                sys.path.remove(pth)
+
+        # remove tempdir modules
+        for name,module in sys.modules.items():
+            if module is not None:
+                if getattr(module, '__file__', '').startswith(self.tempdir):
+                    del sys.modules[name]
+
+    def test_asset_spec_passthru_uses_static_url(self):
+        from webassets import Bundle
+
+        self.create_files({
+                'dotted/__init__.py': '',
+                'dotted/package/__init__.py': '',
+                'dotted/package/name/__init__.py': '',
+                'dotted/package/name/static/zing.css':
+                '* { text-decoration: underline }'})
+        asset_spec = 'dotted.package.name:static/zing.css'
+        bundle = Bundle(asset_spec)
+        self.request.static_url = Mock(return_value='http://example.com/foo/')
+
+        urls = bundle.urls(self.env)
+        self.request.static_url.assert_called_with(asset_spec)
+        assert urls == ['http://example.com/foo/']
+
+    def test_asset_spec_is_resolved(self):
+        from webassets import Bundle
+
+        self.create_files({
+                'dotted/__init__.py': '',
+                'dotted/package/__init__.py': '',
+                'dotted/package/name/__init__.py': '',
+                'dotted/package/name/static/zing.css':
+                '* { text-decoration: underline }'})
+        asset_spec = 'dotted.package.name:static/zing.css'
+        bundle = Bundle(asset_spec, output='gen/zung.css')
+
+        urls = bundle.urls(self.env)
+        assert urls == ['/static/gen/zung.css']
+        assert file(self.tempdir+urls[0]).read() == '* { text-decoration: underline }'
+
+    def test_asset_spec_missing_file(self):
+        from webassets import Bundle
+        from webassets.exceptions import BundleError
+
+        self.create_files({
+                'dotted/__init__.py': '',
+                'dotted/package/__init__.py': '',
+                'dotted/package/name/__init__.py': ''})
+        asset_spec = 'dotted.package.name:static/zing.css'
+        bundle = Bundle(asset_spec)
+
+        with self.assertRaises(BundleError) as cm:
+            bundle.urls(self.env)
+
+        assert cm.exception.args[0].message == '{0!r} does not exist'.format(
+                self.tempdir+'/dotted/package/name/static/zing.css')
+
+    def test_asset_spec_missing_package(self):
+        from webassets import Bundle
+        from webassets.exceptions import BundleError
+
+        self.create_files({
+                'dotted/__init__.py': '',
+                'dotted/package/__init__.py': '',
+                'dotted/package/name/__init__.py': '',
+                'dotted/package/name/static/zing.css':
+                '* { text-decoration: underline }'})
+        asset_spec = 'dotted.package.rabbits:static/zing.css'
+        bundle = Bundle(asset_spec)
+
+        with self.assertRaises(BundleError) as cm:
+            bundle.urls(self.env)
+
+        assert cm.exception.args[0].message == 'No module named rabbits'
+
+    def test_asset_spec_no_static_view(self):
+        from webassets import Bundle
+        from webassets.exceptions import BundleError
+
+        self.create_files({
+                'dotted/__init__.py': '',
+                'dotted/package/__init__.py': '',
+                'dotted/package/name/__init__.py': '',
+                'dotted/package/name/static/zing.css':
+                '* { text-decoration: underline }'})
+        asset_spec = 'dotted.package.name:static/zing.css'
+        bundle = Bundle(asset_spec)
+
+        with self.assertRaises(BundleError) as cm:
+            bundle.urls(self.env)
+
+        assert cm.exception.args[0].message == 'No static URL definition matching '+asset_spec

@@ -17,7 +17,7 @@ README = _read(os.path.join(here, 'README.md'))
 CHANGES = _read(os.path.join(here, 'CHANGES.txt'))
 
 #requires = open('requirements.txt').readlines()
-requires = ['pyramid', 'webassets', 'zope.interface']
+requires = ['pyramid', 'webassets>=0.7.1', 'zope.interface']
 
 class PyTest(Command):
     user_options = []
@@ -49,7 +49,7 @@ setup(name='pyramid_webassets',
       zip_safe=False,
       test_suite='pyramid_webassets',
       install_requires = requires,
-      test_requires = ['pytest', 'mock'],
+      test_requires = ['pytest', 'mock', 'unittest2'],
       cmdclass = {'test': PyTest},
       paster_plugins=['pyramid'],
       )
