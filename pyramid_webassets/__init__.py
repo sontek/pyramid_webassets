@@ -98,3 +98,5 @@ def includeme(config):
 
     config.add_directive('add_webasset', add_webasset)
     config.add_directive('get_webassets_env', get_webassets_env)
+    config.add_static_view(assets_env.url, assets_env.directory)
+
