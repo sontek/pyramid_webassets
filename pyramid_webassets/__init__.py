@@ -1,5 +1,5 @@
+from pyramid.path import AssetResolver
 from pyramid.settings import asbool
-from pyramid.asset import abspath_from_asset_spec
 from pyramid.threadlocal import get_current_request
 from zope.interface import Interface
 from webassets import Environment
@@ -10,9 +10,11 @@ class Environment(Environment):
     def _normalize_source_path(self, spath):
         # spath might be an asset spec
         try:
-            spath = abspath_from_asset_spec(spath)
+            spath = AssetResolver(None).resolve(spath).abspath()
         except ImportError, e:
             raise BundleError(e)
+        except ValueError:
+            pass # Not an absolute asset spec
 
         return super(Environment, self)._normalize_source_path(spath)
 
