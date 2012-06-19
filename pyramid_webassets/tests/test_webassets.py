@@ -247,7 +247,8 @@ class TestAssetSpecs(TempDirHelper, unittest2.TestCase):
         bundle = Bundle(asset_spec, output='gen/zung.css')
 
         urls = bundle.urls(self.env)
-        assert urls == ['/static/gen/zung.css']
+        assert urls == ['http://example.com/static/gen/zung.css']
+        urls[0] = urls[0][len(self.request.application_url):]
         assert file(self.tempdir+urls[0]).read() == '* { text-decoration: underline }'
 
     def test_asset_spec_missing_file(self):

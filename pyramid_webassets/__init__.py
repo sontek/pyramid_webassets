@@ -19,14 +19,21 @@ class Environment(Environment):
         return super(Environment, self)._normalize_source_path(spath)
 
     def absurl(self, fragment):
-        if ':' in fragment:
-            request = get_current_request()
-            try:
-                return request.static_url(fragment)
-            except ValueError, e:
-                raise BundleError(e)
+        query = None
+        request = get_current_request()
 
-        return super(Environment, self).absurl(fragment)
+        if self.url_expire != False and '?' in fragment:
+          fragment, query = fragment.rsplit('?', 1)
+
+        if not ':' in fragment:
+          # Get the path to the file if it's not an asset spec
+          fragment = super(Environment, self).abspath(fragment)
+
+        try:
+            fragment = request.static_url(fragment)
+            return query and "%s?%s" % (fragment, query) or fragment
+        except ValueError, e:
+             raise BundleError(e)
 
 
 class IWebAssetsEnvironment(Interface):
