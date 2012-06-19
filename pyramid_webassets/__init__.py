@@ -1,5 +1,5 @@
+from pyramid.path import AssetResolver
 from pyramid.settings import asbool
-from pyramid.asset import abspath_from_asset_spec
 from pyramid.threadlocal import get_current_request
 from zope.interface import Interface
 from webassets import Environment
@@ -10,21 +10,30 @@ class Environment(Environment):
     def _normalize_source_path(self, spath):
         # spath might be an asset spec
         try:
-            spath = abspath_from_asset_spec(spath)
+            spath = AssetResolver(None).resolve(spath).abspath()
         except ImportError, e:
             raise BundleError(e)
+        except ValueError:
+            pass # Not an absolute asset spec
 
         return super(Environment, self)._normalize_source_path(spath)
 
     def absurl(self, fragment):
-        if ':' in fragment:
-            request = get_current_request()
-            try:
-                return request.static_url(fragment)
-            except ValueError, e:
-                raise BundleError(e)
+        query = None
+        request = get_current_request()
 
-        return super(Environment, self).absurl(fragment)
+        if self.url_expire != False and '?' in fragment:
+          fragment, query = fragment.rsplit('?', 1)
+
+        if not ':' in fragment:
+          # Get the path to the file if it's not an asset spec
+          fragment = super(Environment, self).abspath(fragment)
+
+        try:
+            fragment = request.static_url(fragment)
+            return query and "%s?%s" % (fragment, query) or fragment
+        except ValueError, e:
+             raise BundleError(e)
 
 
 class IWebAssetsEnvironment(Interface):
@@ -96,3 +105,5 @@ def includeme(config):
 
     config.add_directive('add_webasset', add_webasset)
     config.add_directive('get_webassets_env', get_webassets_env)
+    config.add_static_view(assets_env.url, assets_env.directory)
+
