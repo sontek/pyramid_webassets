@@ -31,7 +31,7 @@ class PyTest(Command):
         raise SystemExit(errno)
 
 setup(name='pyramid_webassets',
-      version='0.3',
+      version='0.4',
       description='pyramid_webassets',
       long_description=README + '\n\n' +  CHANGES,
       classifiers=[
@@ -42,7 +42,7 @@ setup(name='pyramid_webassets',
         ],
       author='John Anderson',
       author_email='sontek@gmail.com',
-      url='',
+      url='http://github.com/sontek/pyramid_webassets',
       keywords='web wsgi bfg pylons pyramid',
       packages=find_packages(),
       include_package_data=True,
