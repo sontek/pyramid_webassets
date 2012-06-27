@@ -153,14 +153,17 @@ class TestWebAssets(unittest2.TestCase):
         from pyramid_webassets import includeme
         from pyramid_webassets import add_webasset
         from pyramid_webassets import get_webassets_env
+        from pyramid_webassets import get_webassets_env_from_request
 
         config = Mock()
         add_directive = Mock()
         registerUtility = Mock()
+        set_request_property = Mock()
 
         config.registry = Mock()
         config.registry.registerUtility = registerUtility
         config.add_directive = add_directive
+        config.set_request_property = set_request_property
 
         settings = {
             'webassets.base_url': '/static',
@@ -175,6 +178,23 @@ class TestWebAssets(unittest2.TestCase):
         expected2 = ('get_webassets_env', get_webassets_env)
         assert add_directive.call_args_list[0][0] == expected1
         assert add_directive.call_args_list[1][0] == expected2
+
+        assert set_request_property.call_args_list[0][0] == \
+            (get_webassets_env_from_request, 'webassets_env')
+
+    def test_get_webassets_env_from_request(self):
+        from pyramid_webassets import get_webassets_env_from_request
+        from pyramid_webassets import IWebAssetsEnvironment
+
+        request = Mock()
+        request.registry = Mock()
+        queryUtility = Mock()
+        request.registry.queryUtility = queryUtility
+
+        env = get_webassets_env_from_request(request)
+        queryUtility.assert_called_with(IWebAssetsEnvironment)
+
+        assert env != None
 
 
 class TestAssetSpecs(TempDirHelper, unittest2.TestCase):
