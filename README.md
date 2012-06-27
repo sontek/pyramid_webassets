@@ -39,6 +39,14 @@ If you are using Jinja2, you can just do the following configuration (this assum
     jinja2_env.assets_environment = assets_env
  ```
 
+From The Request
+====================
+If you are not using Jinja2, you can still access the environment from the request.
+
+```python
+    jst_urls = request.webassets_env['jst'].urls()
+ ```
+
 Extras
 ====================
 There are a few utility methods you can use:

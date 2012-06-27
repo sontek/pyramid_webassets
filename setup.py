@@ -17,7 +17,7 @@ README = _read(os.path.join(here, 'README.md'))
 CHANGES = _read(os.path.join(here, 'CHANGES.txt'))
 
 #requires = open('requirements.txt').readlines()
-requires = ['pyramid', 'webassets>=0.7.1', 'zope.interface']
+requires = ['pyramid>=1.3', 'webassets>=0.7.1', 'zope.interface']
 
 class PyTest(Command):
     user_options = []
