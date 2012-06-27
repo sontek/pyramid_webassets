@@ -50,7 +50,7 @@ def get_webassets_env(config):
 
 
 def get_webassets_env_from_settings(settings, prefix='webassets'):
-    """This function will take all webassets.* parameteres, and
+    """This function will take all webassets.* parameters, and
     call the ``Environment()`` constructor with kwargs passed in.
 
     The only two parameters that are not passed as keywords are:
