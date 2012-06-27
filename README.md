@@ -14,7 +14,6 @@ but we currently support:
 webassets.base_dir=%(here)s/app/static
 webassets.base_url=/static
 webassets.debug=True
-webassets.base_url=/static
 webassets.updater=timestamp
 webassets.cache=False
 webassets.jst_compiler=Handlebars.compile
