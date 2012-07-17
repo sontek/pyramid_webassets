@@ -29,6 +29,26 @@ Then you can just use config.add_webasset to add bundles to your environment
     config.add_webasset('jst', jst)
  ```
 
+ Mako
+====================
+You can use the global webassets tag:
+``` python
+    % for url in webassets(request, 'css/bootstrap.css', 'css/bootstrap-responsive.css', output='css/generated.css', filters='cssmin'):
+        <link href="${url}" rel="stylesheet">
+    % endfor
+```
+
+or you can grab the environment from the request.
+
+From The Request
+====================
+If you are not using Jinja2, you can still access the environment from the request.
+
+```python
+    jst_urls = request.webassets_env['jst'].urls()
+ ```
+
+
 Jinja2
 ====================
 If you are using Jinja2, you can just do the following configuration (this assumes use of pyramid_jinja2):
@@ -37,14 +57,6 @@ If you are using Jinja2, you can just do the following configuration (this assum
     config.add_jinja2_extension('webassets.ext.jinja2.AssetsExtension')
     assets_env = config.get_webassets_env()
     jinja2_env.assets_environment = assets_env
- ```
-
-From The Request
-====================
-If you are not using Jinja2, you can still access the environment from the request.
-
-```python
-    jst_urls = request.webassets_env['jst'].urls()
  ```
 
 Extras

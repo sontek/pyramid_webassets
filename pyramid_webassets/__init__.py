@@ -1,9 +1,10 @@
-from pyramid.path import AssetResolver
-from pyramid.settings import asbool
-from pyramid.threadlocal import get_current_request
-from zope.interface import Interface
-from webassets import Environment
-from webassets.exceptions import BundleError
+from pyramid.path           import AssetResolver
+from pyramid.settings       import asbool
+from pyramid.threadlocal    import get_current_request
+from zope.interface         import Interface
+from webassets              import Bundle
+from webassets.env          import Environment
+from webassets.exceptions   import BundleError
 
 
 class Environment(Environment):
@@ -93,6 +94,9 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
     if 'jst_compiler' in kwargs:
         kwargs['JST_COMPILER'] = kwargs.pop('jst_compiler')
 
+    if 'manifest' in kwargs:
+        kwargs['manifest'] = asbool(kwargs.pop('manifest'))
+
     assets_env = Environment(asset_dir, asset_url, **kwargs)
 
     return assets_env
@@ -103,7 +107,29 @@ def get_webassets_env_from_request(request):
     return request.registry.queryUtility(IWebAssetsEnvironment)
 
 
+def assets(request, *args, **kwargs):
+    env = get_webassets_env_from_request(request)
+
+    result = []
+
+    for f in args:
+        try:
+            result.append(env[f])
+        except KeyError:
+            result.append(f)
+
+    bundle = Bundle(*result, **kwargs)
+    urls = bundle.urls(env=env)
+
+    return urls
+
+def add_assets_global(event):
+    event['webassets'] = assets
+
+
 def includeme(config):
+    config.add_subscriber(add_assets_global, 'pyramid.events.BeforeRender')
+
     assets_env = get_webassets_env_from_settings(config.registry.settings)
 
     config.registry.registerUtility(assets_env, IWebAssetsEnvironment)
@@ -113,3 +139,4 @@ def includeme(config):
     config.add_static_view(assets_env.url, assets_env.directory)
     config.set_request_property(get_webassets_env_from_request,
         'webassets_env', reify=True)
+    config.set_request_property(assets, 'webassets', reify=True)
