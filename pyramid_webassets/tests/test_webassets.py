@@ -1,10 +1,10 @@
-import unittest2
+import unittest
 from mock import Mock
 from pyramid import testing
 from webassets.test import TempDirHelper
 
 
-class TestWebAssets(unittest2.TestCase):
+class TestWebAssets(unittest.TestCase):
     def test_asset_interface(self):
         from pyramid_webassets import IWebAssetsEnvironment
 
@@ -197,7 +197,7 @@ class TestWebAssets(unittest2.TestCase):
         assert env != None
 
 
-class TestAssetSpecs(TempDirHelper, unittest2.TestCase):
+class TestAssetSpecs(TempDirHelper, unittest.TestCase):
     # Mask the methods from TempDirHelper, pytest will try to call them without
     # instantiating the class...
     setup = None
@@ -238,7 +238,8 @@ class TestAssetSpecs(TempDirHelper, unittest2.TestCase):
                     del sys.modules[name]
 
     def test_asset_spec_passthru_uses_static_url(self):
-        from webassets import Bundle
+        from webassets              import Bundle
+        from pyramid.path           import AssetResolver
 
         self.create_files({
                 'dotted/__init__.py': '',
@@ -251,7 +252,8 @@ class TestAssetSpecs(TempDirHelper, unittest2.TestCase):
         self.request.static_url = Mock(return_value='http://example.com/foo/')
 
         urls = bundle.urls(self.env)
-        self.request.static_url.assert_called_with(asset_spec)
+        path = AssetResolver(None).resolve(asset_spec).abspath()
+        self.request.static_url.assert_called_with(path)
         assert urls == ['http://example.com/foo/']
 
     def test_asset_spec_is_resolved(self):
@@ -285,8 +287,9 @@ class TestAssetSpecs(TempDirHelper, unittest2.TestCase):
         with self.assertRaises(BundleError) as cm:
             bundle.urls(self.env)
 
-        assert cm.exception.args[0].message == '{0!r} does not exist'.format(
-                self.tempdir+'/dotted/package/name/static/zing.css')
+        assert cm.exception.message == "The asset %s does not exist" % (
+            self.tempdir+'/static/webassets-external/zing.css'
+        )
 
     def test_asset_spec_missing_package(self):
         from webassets import Bundle
@@ -308,7 +311,6 @@ class TestAssetSpecs(TempDirHelper, unittest2.TestCase):
 
     def test_asset_spec_no_static_view(self):
         from webassets import Bundle
-        from webassets.exceptions import BundleError
 
         self.create_files({
                 'dotted/__init__.py': '',
@@ -319,7 +321,10 @@ class TestAssetSpecs(TempDirHelper, unittest2.TestCase):
         asset_spec = 'dotted.package.name:static/zing.css'
         bundle = Bundle(asset_spec)
 
-        with self.assertRaises(BundleError) as cm:
-            bundle.urls(self.env)
+        # webassets will copy the file into a place that it can generate
+        # a url for
+        urls = bundle.urls(self.env)
+        domain = 'http://example.com/static/webassets-external/'
 
-        assert cm.exception.args[0].message == 'No static URL definition matching '+asset_spec
+        assert domain in urls[0]
+        assert len(urls) == 1

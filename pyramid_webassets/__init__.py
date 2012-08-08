@@ -4,38 +4,48 @@ from pyramid.threadlocal    import get_current_request
 from zope.interface         import Interface
 from webassets              import Bundle
 from webassets.env          import Environment
+from webassets.env          import Resolver
 from webassets.exceptions   import BundleError
 
 
-class Environment(Environment):
-    def _normalize_source_path(self, spath):
-        # spath might be an asset spec
+class PyramidResolver(Resolver):
+    def glob_staticfiles(self, item):
+        #TODO: figure out globbing
+        pass
+
+    def search_for_source(self, item):
         try:
-            spath = AssetResolver(None).resolve(spath).abspath()
-        except ImportError, e:
+            item = AssetResolver(None).resolve(item).abspath()
+        except ImportError as e:
             raise BundleError(e)
-        except ValueError:
-            pass # Not an absolute asset spec
+        except ValueError as e:
+            return super(PyramidResolver, self).search_for_source(item)
 
-        return super(Environment, self)._normalize_source_path(spath)
+        return item
 
-    def absurl(self, fragment):
-        query = None
+    def resolve_source_to_url(self, filepath, item):
         request = get_current_request()
+        url = request.static_url(filepath)
 
-        if self.url_expire != False and '?' in fragment:
-          fragment, query = fragment.rsplit('?', 1)
+        return url
 
-        if not ':' in fragment:
-          # Get the path to the file if it's not an asset spec
-          fragment = super(Environment, self).abspath(fragment)
-
+    def resolve_output_to_url(self, item):
         try:
-            fragment = request.static_url(fragment)
-            return query and "%s?%s" % (fragment, query) or fragment
-        except ValueError, e:
-             raise BundleError(e)
+            request = get_current_request()
 
+            url = request.static_url(self.search_for_source(item))
+
+            return url
+        except ValueError as e:
+            if ':' in item:
+                e.message += '(%s)' % item
+
+            raise BundleError(e)
+
+        return self.resolve_source_to_url(None, item)
+
+class Environment(Environment):
+    resolver_class = PyramidResolver
 
 class IWebAssetsEnvironment(Interface):
     pass
