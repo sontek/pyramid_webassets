@@ -116,6 +116,9 @@ def get_webassets_env_from_request(request):
     """ Get the webassets environment in the registry from the request. """
     return request.registry.queryUtility(IWebAssetsEnvironment)
 
+def add_setting(config, key, value):
+    env = config.registry.queryUtility(IWebAssetsEnvironment)
+    env.config[key] = value
 
 def assets(request, *args, **kwargs):
     env = get_webassets_env_from_request(request)
@@ -146,6 +149,7 @@ def includeme(config):
 
     config.add_directive('add_webasset', add_webasset)
     config.add_directive('get_webassets_env', get_webassets_env)
+    config.add_directive('add_webassets_setting', add_setting)
     config.add_static_view(assets_env.url, assets_env.directory)
     config.set_request_property(get_webassets_env_from_request,
         'webassets_env', reify=True)

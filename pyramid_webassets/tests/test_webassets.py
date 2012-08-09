@@ -29,6 +29,23 @@ class TestWebAssets(unittest.TestCase):
         add_webasset(config, 'foo', 'bar')
         register.assert_called_with('foo', 'bar')
 
+    def test_add_setting(self):
+        from pyramid_webassets import add_setting
+
+        config = Mock()
+        config.registry = Mock()
+        queryUtility = Mock()
+        env = Mock()
+        env.config = {}
+        register = Mock()
+        env.register = register
+        queryUtility.return_value = env
+
+        config.registry.queryUtility = queryUtility
+
+        add_setting(config, 'foo', 'bar')
+        assert env.config['foo'] == 'bar'
+
     def test_get_webassets_env(self):
         from pyramid_webassets import get_webassets_env
         from pyramid_webassets import IWebAssetsEnvironment
@@ -153,6 +170,7 @@ class TestWebAssets(unittest.TestCase):
         from pyramid_webassets import includeme
         from pyramid_webassets import add_webasset
         from pyramid_webassets import get_webassets_env
+        from pyramid_webassets import add_setting
         from pyramid_webassets import get_webassets_env_from_request
 
         config = Mock()
@@ -176,8 +194,11 @@ class TestWebAssets(unittest.TestCase):
 
         expected1 = ('add_webasset', add_webasset)
         expected2 = ('get_webassets_env', get_webassets_env)
+        expected3 = ('add_webassets_setting', add_setting)
+
         assert add_directive.call_args_list[0][0] == expected1
         assert add_directive.call_args_list[1][0] == expected2
+        assert add_directive.call_args_list[2][0] == expected3
 
         assert set_request_property.call_args_list[0][0] == \
             (get_webassets_env_from_request, 'webassets_env')
