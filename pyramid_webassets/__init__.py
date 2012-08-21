@@ -97,7 +97,10 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
         kwargs['debug'] = dbg
 
     if 'cache' in kwargs:
-        kwargs['cache'] = asbool(kwargs['cache'])
+        cache = kwargs['cache'].lower()
+
+        if cache == 'false' or cache == 'true':
+            kwargs['cache'] = asbool(kwargs['cache'])
 
     # 'updater' is just passed in...
 
@@ -105,7 +108,10 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
         kwargs['JST_COMPILER'] = kwargs.pop('jst_compiler')
 
     if 'manifest' in kwargs:
-        kwargs['manifest'] = asbool(kwargs.pop('manifest'))
+        manifest = kwargs['manifest'].lower()
+
+        if manifest == 'false' or manifest == 'none':
+            kwargs['manifest'] = asbool(kwargs['manifest'])
 
     assets_env = Environment(asset_dir, asset_url, **kwargs)
 
