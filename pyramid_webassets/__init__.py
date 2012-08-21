@@ -156,7 +156,6 @@ def includeme(config):
     config.add_directive('add_webasset', add_webasset)
     config.add_directive('get_webassets_env', get_webassets_env)
     config.add_directive('add_webassets_setting', add_setting)
-    config.add_static_view(assets_env.url, assets_env.directory)
     config.set_request_property(get_webassets_env_from_request,
         'webassets_env', reify=True)
     config.set_request_property(assets, 'webassets', reify=True)
