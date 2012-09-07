@@ -22,6 +22,8 @@ webassets.jst_compiler=Handlebars.compile
 Then you can just use config.add_webasset to add bundles to your environment
 
 ``` python
+    from webassets import Bundle
+    
     jst = Bundle('templates/*.html',
             filters='jst',
             output='js/jst.js', debug=False)
@@ -58,6 +60,13 @@ If you are using Jinja2, you can just do the following configuration (this assum
     assets_env = config.get_webassets_env()
     jinja2_env.assets_environment = assets_env
  ```
+and then:
+
+``` python
+    {% assets "jst" %}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+```
 
 Extras
 ====================
