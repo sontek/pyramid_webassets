@@ -1,3 +1,6 @@
+import glob
+from os import path
+
 from pyramid.path           import AssetResolver
 from pyramid.settings       import asbool
 from pyramid.threadlocal    import get_current_request
@@ -9,10 +12,6 @@ from webassets.exceptions   import BundleError
 
 
 class PyramidResolver(Resolver):
-    def glob_staticfiles(self, item):
-        #TODO: figure out globbing
-        pass
-
     def search_for_source(self, item):
         try:
             item = AssetResolver(None).resolve(item).abspath()
@@ -21,7 +20,15 @@ class PyramidResolver(Resolver):
         except ValueError as e:
             return super(PyramidResolver, self).search_for_source(item)
 
-        return item
+        if glob.has_magic(item):
+            return [
+                filename
+                for filename
+                in glob.iglob(item)
+                if not path.isdir(item)
+            ]
+        else:
+            return item
 
     def resolve_source_to_url(self, filepath, item):
         request = get_current_request()
