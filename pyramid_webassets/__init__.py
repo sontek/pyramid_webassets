@@ -54,8 +54,6 @@ class PyramidResolver(Resolver):
 
             raise BundleError(e)
 
-        return self.resolve_source_to_url(None, item)
-
 class Environment(Environment):
     resolver_class = PyramidResolver
 
