@@ -97,7 +97,10 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
         kwargs['debug'] = dbg
 
     if 'cache' in kwargs:
-        kwargs['cache'] = asbool(kwargs['cache'])
+        cache = kwargs['cache'].lower()
+
+        if cache == 'false' or cache == 'true':
+            kwargs['cache'] = asbool(kwargs['cache'])
 
     # 'updater' is just passed in...
 
@@ -105,7 +108,10 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
         kwargs['JST_COMPILER'] = kwargs.pop('jst_compiler')
 
     if 'manifest' in kwargs:
-        kwargs['manifest'] = asbool(kwargs.pop('manifest'))
+        manifest = kwargs['manifest'].lower()
+
+        if manifest == 'false' or manifest == 'none':
+            kwargs['manifest'] = asbool(kwargs['manifest'])
 
     assets_env = Environment(asset_dir, asset_url, **kwargs)
 
@@ -150,7 +156,6 @@ def includeme(config):
     config.add_directive('add_webasset', add_webasset)
     config.add_directive('get_webassets_env', get_webassets_env)
     config.add_directive('add_webassets_setting', add_setting)
-    config.add_static_view(assets_env.url, assets_env.directory)
     config.set_request_property(get_webassets_env_from_request,
         'webassets_env', reify=True)
     config.set_request_property(assets, 'webassets', reify=True)
