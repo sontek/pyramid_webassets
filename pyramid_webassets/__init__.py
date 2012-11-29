@@ -42,6 +42,9 @@ class PyramidResolver(Resolver):
         return url
 
     def resolve_output_to_url(self, item):
+        if not path.isabs(item):
+            item = path.join(self.env.directory, item)
+
         try:
             request = get_current_request()
 
