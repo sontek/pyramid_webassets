@@ -1,3 +1,6 @@
+import glob
+from os import path
+
 from pyramid.path           import AssetResolver
 from pyramid.settings       import asbool
 from pyramid.threadlocal    import get_current_request
@@ -9,27 +12,50 @@ from webassets.exceptions   import BundleError
 
 
 class PyramidResolver(Resolver):
-    def glob_staticfiles(self, item):
-        #TODO: figure out globbing
-        pass
+    def __init__(self, env):
+        super(PyramidResolver, self).__init__(env)
+        self.resolver = AssetResolver(None)
 
     def search_for_source(self, item):
         try:
-            item = AssetResolver(None).resolve(item).abspath()
+            item = self.resolver.resolve(item).abspath()
         except ImportError as e:
             raise BundleError(e)
         except ValueError as e:
             return super(PyramidResolver, self).search_for_source(item)
 
-        return item
+        # Take care of globs
+        if glob.has_magic(item):
+            return [
+                filename
+                for filename
+                in glob.iglob(item)
+                if not path.isdir(item)
+            ]
+        else:
+            return item
 
     def resolve_source_to_url(self, filepath, item):
         request = get_current_request()
-        url = request.static_url(filepath)
 
-        return url
+        if ':' in item:
+            # webassets gives us an absolute path to the source file
+            # If the input item that generate this path was an asset spec
+            # try to resolve the package and recreate the asset spec to use
+            # for the static route generation.
+            package = item[:item.find(':')]
+            package_path = self.resolver.resolve('%s:' % package).abspath()
+            filepath = filepath.replace(package_path, '').strip('/')
+            spec = '%s:%s' % (package, filepath)
+        else:
+            spec = filepath
+
+        return request.static_url(spec)
 
     def resolve_output_to_url(self, item):
+        if not path.isabs(item):
+            item = path.join(self.env.directory, item)
+
         try:
             request = get_current_request()
 
@@ -41,8 +67,6 @@ class PyramidResolver(Resolver):
                 e.message += '(%s)' % item
 
             raise BundleError(e)
-
-        return self.resolve_source_to_url(None, item)
 
 class Environment(Environment):
     resolver_class = PyramidResolver
