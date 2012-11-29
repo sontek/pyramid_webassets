@@ -12,14 +12,19 @@ from webassets.exceptions   import BundleError
 
 
 class PyramidResolver(Resolver):
+    def __init__(self, env):
+        super(PyramidResolver, self).__init__(env)
+        self.resolver = AssetResolver(None)
+
     def search_for_source(self, item):
         try:
-            item = AssetResolver(None).resolve(item).abspath()
+            item = self.resolver.resolve(item).abspath()
         except ImportError as e:
             raise BundleError(e)
         except ValueError as e:
             return super(PyramidResolver, self).search_for_source(item)
 
+        # Take care of globs
         if glob.has_magic(item):
             return [
                 filename
