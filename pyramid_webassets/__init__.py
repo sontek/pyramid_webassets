@@ -37,9 +37,20 @@ class PyramidResolver(Resolver):
 
     def resolve_source_to_url(self, filepath, item):
         request = get_current_request()
-        url = request.static_url(filepath)
 
-        return url
+        if ':' in item:
+            # webassets gives us an absolute path to the source file
+            # If the input item that generate this path was an asset spec
+            # try to resolve the package and recreate the asset spec to use
+            # for the static route generation.
+            package = item[:item.find(':')]
+            package_path = self.resolver.resolve('%s:' % package).abspath()
+            filepath = filepath.replace(package_path, '').strip('/')
+            spec = '%s:%s' % (package, filepath)
+        else:
+            spec = filepath
+
+        return request.static_url(spec)
 
     def resolve_output_to_url(self, item):
         if not path.isabs(item):
