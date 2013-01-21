@@ -140,6 +140,7 @@ class TestWebAssets(unittest.TestCase):
         assert isinstance(env.updater, webassets.updater.AlwaysUpdater)
         assert env.config['JST_COMPILER'] == settings['webassets.jst_compiler']
         assert env.cache == None
+        assert env.auto_build == True
 
     def test_get_webassets_env_from_settings_with_cache(self):
         from pyramid_webassets import get_webassets_env_from_settings
