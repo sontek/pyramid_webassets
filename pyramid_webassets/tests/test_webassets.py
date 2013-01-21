@@ -104,6 +104,21 @@ class TestWebAssets(unittest.TestCase):
         assert env.directory == settings['webassets.base_dir']
         assert env.url == settings['webassets.base_url']
 
+    def test_get_webassets_env_from_settings_autobuild_disabled(self):
+        from pyramid_webassets import get_webassets_env_from_settings
+
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': '/home/sontek',
+            'webassets.auto_build': 'false'
+        }
+
+        env = get_webassets_env_from_settings(settings)
+
+        assert env.directory == settings['webassets.base_dir']
+        assert env.url == settings['webassets.base_url']
+        assert env.auto_build == False
+
     def test_get_webassets_env_from_settings_complete(self):
         from pyramid_webassets import get_webassets_env_from_settings
         import webassets
