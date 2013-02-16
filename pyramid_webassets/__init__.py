@@ -128,6 +128,12 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
 
     # 'updater' is just passed in...
 
+    if 'auto_build' in kwargs:
+        auto_build = kwargs['auto_build'].lower()
+
+        if auto_build == 'false' or auto_build == 'true':
+            kwargs['auto_build'] = asbool(kwargs['auto_build'])
+
     if 'jst_compiler' in kwargs:
         kwargs['JST_COMPILER'] = kwargs.pop('jst_compiler')
 
