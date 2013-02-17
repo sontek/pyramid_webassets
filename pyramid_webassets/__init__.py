@@ -137,6 +137,9 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
     if 'jst_compiler' in kwargs:
         kwargs['JST_COMPILER'] = kwargs.pop('jst_compiler')
 
+    if 'jst_namespace' in kwargs:
+        kwargs['JST_NAMESPACE'] = kwargs.pop('jst_namespace')
+
     if 'manifest' in kwargs:
         manifest = kwargs['manifest'].lower()
 
