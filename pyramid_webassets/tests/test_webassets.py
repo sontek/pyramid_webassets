@@ -129,7 +129,8 @@ class TestWebAssets(unittest.TestCase):
             'webassets.debug': 'true',
             'webassets.cache': 'false',
             'webassets.updater': 'always',
-            'webassets.jst_compiler': 'Handlebars.compile'
+            'webassets.jst_compiler': 'Handlebars.compile',
+            'webassets.jst_namespace': 'window.Ember.TEMPLATES'
         }
 
         env = get_webassets_env_from_settings(settings)
@@ -139,6 +140,7 @@ class TestWebAssets(unittest.TestCase):
         assert env.debug == True
         assert isinstance(env.updater, webassets.updater.AlwaysUpdater)
         assert env.config['JST_COMPILER'] == settings['webassets.jst_compiler']
+        assert env.config['JST_NAMESPACE'] == settings['webassets.jst_namespace']
         assert env.cache == None
         assert env.auto_build == True
 
