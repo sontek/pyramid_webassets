@@ -146,6 +146,12 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
         if manifest == 'false' or manifest == 'none':
             kwargs['manifest'] = asbool(kwargs['manifest'])
 
+    if 'url_expire' in kwargs:
+        url_expire = kwargs['url_expire'].lower()
+
+        if url_expire == 'false' or url_expire == 'true':
+            kwargs['url_expire'] = asbool(kwargs['url_expire'])
+
     assets_env = Environment(asset_dir, asset_url, **kwargs)
 
     return assets_env
