@@ -9,6 +9,7 @@ but we currently support:
  * ``updater``: Different update configurations (i.e always, timestamp)
  * ``cache``: If we should use webassets cache
  * ``jst_compiler``: A custom jst compiler, by default it uses underscore
+ * ``url_expire``: If a cache-busting query string should be added to URLs
 
 ``` python
 webassets.base_dir=%(here)s/app/static
@@ -17,6 +18,7 @@ webassets.debug=True
 webassets.updater=timestamp
 webassets.cache=False
 webassets.jst_compiler=Handlebars.compile
+webassets.url_expire=False
 ```
 
 Then you can just use config.add_webasset to add bundles to your environment
