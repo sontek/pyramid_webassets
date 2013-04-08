@@ -5,6 +5,7 @@ from pyramid.settings       import asbool
 from pyramid.threadlocal    import get_current_request
 from zope.interface         import Interface
 from webassets              import Bundle
+from webassets.bundle       import has_placeholder
 from webassets.env          import Environment
 from webassets.env          import Resolver
 from webassets.exceptions   import BundleError
@@ -35,16 +36,47 @@ class PyramidResolver(Resolver):
 
     def resolve_source_to_url(self, filepath, item):
         request = get_current_request()
+        env = self.env
 
+        # Copied from webassets 0.8. Reproduced here for backwards
+        # compatibility with the previous webassets release.
+        # This ensures files which do not require building are still served
+        # with proper versioning of URLs.
+        # This can likely be removed once miracle2k/webassets#117 is fixed.
+
+        # Only query the version if we need to for performance
+        version = None
+        if has_placeholder(filepath) or env.url_expire != False:
+            # If auto-build is enabled, we must not use a cached version
+            # value, or we might serve old versions.
+            bundle = Bundle(item, output=filepath)
+            version = bundle.get_version(env, refresh=env.auto_build)
+
+        url = filepath
+        if has_placeholder(url):
+            url = url % {'version': version}
+
+        # This part is different from webassets. Try to resolve with an asset
+        # spec first, then try the base class source URL resolver.
+
+        resolved = False
         if request is not None:
             try:
-                return request.static_url(filepath)
+                url = request.static_url(url)
+                resolved = True
             except ValueError:
                 pass
-        return super(PyramidResolver, self).resolve_source_to_url(
-            filepath,
-            item
-        )
+
+        if not resolved:
+            url = super(PyramidResolver, self).resolve_source_to_url(
+                url,
+                item
+            )
+
+        if env.url_expire or (
+                env.url_expire is None and not has_placeholder(filepath)):
+            url = "%s?%s" % (url, version)
+        return url
 
     def resolve_output_to_path(self, target, bundle):
         package, filepath = self._split_asset_spec(target)
