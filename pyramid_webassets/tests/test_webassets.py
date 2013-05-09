@@ -369,3 +369,33 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
 
         assert domain in urls[0]
         assert len(urls) == 1
+
+    def test_webassets_static_view_setting(self):
+        from pyramid_webassets import get_webassets_env_from_settings
+
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.static_view': True,
+        }
+
+        env = get_webassets_env_from_settings(settings)
+
+        assert env != None
+        assert env.config['static_view'] == settings['webassets.static_view']
+
+    def test_webassets_static_view_cache_control_setting(self):
+        from pyramid_webassets import get_webassets_env_from_settings
+
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.static_view': True,
+            'webassets.cache_max_age': 3600,
+        }
+
+        env = get_webassets_env_from_settings(settings)
+
+        assert env != None
+        assert env.config['static_view'] == settings['webassets.static_view']
+        assert env.config['cache_max_age'] == settings['webassets.cache_max_age']
