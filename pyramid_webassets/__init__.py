@@ -164,6 +164,11 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
     else:
         kwargs['static_view'] = False
 
+    if 'cache_max_age' in kwargs:
+        kwargs['cache_max_age'] = int(kwargs.pop('cache_max_age'))
+    else:
+        kwargs['cache_max_age'] = None
+
     assets_env = Environment(asset_dir, asset_url, **kwargs)
 
     return assets_env
@@ -211,7 +216,8 @@ def includeme(config):
     if assets_env.config['static_view']:    
         config.add_static_view(
             assets_env.url, 
-            assets_env.directory
+            assets_env.directory, 
+            cache_max_age=assets_env.config['cache_max_age']
         )
 
     config.set_request_property(get_webassets_env_from_request,
