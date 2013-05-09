@@ -159,6 +159,11 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
         if url_expire == 'false' or url_expire == 'true':
             kwargs['url_expire'] = asbool(kwargs['url_expire'])
 
+    if 'static_view' in kwargs:
+        kwargs['static_view'] = asbool(kwargs['static_view'])
+    else:
+        kwargs['static_view'] = False
+
     assets_env = Environment(asset_dir, asset_url, **kwargs)
 
     return assets_env
@@ -202,6 +207,13 @@ def includeme(config):
     config.add_directive('add_webasset', add_webasset)
     config.add_directive('get_webassets_env', get_webassets_env)
     config.add_directive('add_webassets_setting', add_setting)
+
+    if assets_env.config['static_view']:    
+        config.add_static_view(
+            assets_env.url, 
+            assets_env.directory
+        )
+
     config.set_request_property(get_webassets_env_from_request,
         'webassets_env', reify=True)
     config.set_request_property(assets, 'webassets', reify=True)
