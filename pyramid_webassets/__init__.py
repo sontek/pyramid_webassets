@@ -65,8 +65,15 @@ class PyramidResolver(Resolver):
         except ValueError as e:
             if ':' in item:
                 e.message += '(%s)' % item
-
             raise BundleError(e)
+        except AttributeError as e: # pragma: no cover
+            if e.message == "'NoneType' object has no attribute 'static_url'":
+                # render() has been called outside of a request
+                # e.g., to compile assets before handling requests
+                # and so failure is acceptable
+                pass 
+            else:
+                raise
 
 class Environment(Environment):
     resolver_class = PyramidResolver
