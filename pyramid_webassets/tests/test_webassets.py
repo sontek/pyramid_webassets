@@ -293,7 +293,6 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
 
         urls = bundle.urls(self.env)
         path = AssetResolver(None).resolve(asset_spec).abspath()
-        print path
         self.request.static_url.assert_called_with(path)
         assert urls == ['http://example.com/foo/']
 
