@@ -65,8 +65,15 @@ class PyramidResolver(Resolver):
         except ValueError as e:
             if ':' in item:
                 e.message += '(%s)' % item
-
             raise BundleError(e)
+        except AttributeError as e: # pragma: no cover
+            if e.message == "'NoneType' object has no attribute 'static_url'":
+                # render() has been called outside of a request
+                # e.g., to compile assets before handling requests
+                # and so failure is acceptable
+                pass 
+            else:
+                raise
 
 class Environment(Environment):
     resolver_class = PyramidResolver
@@ -152,6 +159,16 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
         if url_expire == 'false' or url_expire == 'true':
             kwargs['url_expire'] = asbool(kwargs['url_expire'])
 
+    if 'static_view' in kwargs:
+        kwargs['static_view'] = asbool(kwargs['static_view'])
+    else:
+        kwargs['static_view'] = False
+
+    if 'cache_max_age' in kwargs:
+        kwargs['cache_max_age'] = int(kwargs.pop('cache_max_age'))
+    else:
+        kwargs['cache_max_age'] = None
+
     assets_env = Environment(asset_dir, asset_url, **kwargs)
 
     return assets_env
@@ -195,6 +212,14 @@ def includeme(config):
     config.add_directive('add_webasset', add_webasset)
     config.add_directive('get_webassets_env', get_webassets_env)
     config.add_directive('add_webassets_setting', add_setting)
+
+    if assets_env.config['static_view']:    
+        config.add_static_view(
+            assets_env.url, 
+            assets_env.directory, 
+            cache_max_age=assets_env.config['cache_max_age']
+        )
+
     config.set_request_property(get_webassets_env_from_request,
         'webassets_env', reify=True)
     config.set_request_property(assets, 'webassets', reify=True)

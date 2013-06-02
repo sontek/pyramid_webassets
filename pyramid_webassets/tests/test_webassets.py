@@ -1,4 +1,5 @@
 import unittest
+import os
 from mock import Mock
 from pyramid import testing
 from webassets.test import TempDirHelper
@@ -96,7 +97,7 @@ class TestWebAssets(unittest.TestCase):
 
         settings = {
             'webassets.base_url': '/static',
-            'webassets.base_dir': '/home/sontek'
+            'webassets.base_dir': os.getcwd(),
         }
 
         env = get_webassets_env_from_settings(settings)
@@ -109,7 +110,7 @@ class TestWebAssets(unittest.TestCase):
 
         settings = {
             'webassets.base_url': '/static',
-            'webassets.base_dir': '/home/sontek',
+            'webassets.base_dir': os.getcwd(),
             'webassets.auto_build': 'false'
         }
 
@@ -125,7 +126,7 @@ class TestWebAssets(unittest.TestCase):
 
         settings = {
             'webassets.base_url': '/static',
-            'webassets.base_dir': '/home/sontek',
+            'webassets.base_dir': os.getcwd(),
             'webassets.debug': 'true',
             'webassets.cache': 'false',
             'webassets.updater': 'always',
@@ -149,7 +150,7 @@ class TestWebAssets(unittest.TestCase):
 
         settings = {
             'webassets.base_url': '/static',
-            'webassets.base_dir': '/home/sontek',
+            'webassets.base_dir': os.getcwd(),
             'webassets.cache': 'true',
         }
 
@@ -162,7 +163,7 @@ class TestWebAssets(unittest.TestCase):
 
         settings = {
             'foo.base_url': '/static',
-            'foo.base_dir': '/home/sontek',
+            'foo.base_dir': os.getcwd(),
         }
 
         env = get_webassets_env_from_settings(settings, prefix='foo')
@@ -176,13 +177,13 @@ class TestWebAssets(unittest.TestCase):
 
         settings = {
             'foo.base_url': '/static',
-            'foo.base_dir': '/home/sontek',
+            'foo.base_dir': os.getcwd(),
         }
 
         with self.assertRaises(Exception) as cm:
             get_webassets_env_from_settings(settings, prefix='webassets')
 
-        assert cm.exception.message == "You need to provide webassets.base_dir in your configuration"
+            assert cm.exception.message == "You need to provide webassets.base_dir in your configuration"
 
     def test_includeme(self):
         from pyramid_webassets import includeme
@@ -203,7 +204,7 @@ class TestWebAssets(unittest.TestCase):
 
         settings = {
             'webassets.base_url': '/static',
-            'webassets.base_dir': '/home/sontek',
+            'webassets.base_dir': os.getcwd(),
         }
 
         config.registry.settings = settings
@@ -292,6 +293,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
 
         urls = bundle.urls(self.env)
         path = AssetResolver(None).resolve(asset_spec).abspath()
+        print path
         self.request.static_url.assert_called_with(path)
         assert urls == ['http://example.com/foo/']
 
@@ -346,7 +348,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         with self.assertRaises(BundleError) as cm:
             bundle.urls(self.env)
 
-        assert cm.exception.args[0].message == 'No module named rabbits'
+            assert cm.exception.args[0].message == 'No module named rabbits'
 
     def test_asset_spec_no_static_view(self):
         from webassets import Bundle
@@ -367,3 +369,33 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
 
         assert domain in urls[0]
         assert len(urls) == 1
+
+    def test_webassets_static_view_setting(self):
+        from pyramid_webassets import get_webassets_env_from_settings
+
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.static_view': True,
+        }
+
+        env = get_webassets_env_from_settings(settings)
+
+        assert env != None
+        assert env.config['static_view'] == settings['webassets.static_view']
+
+    def test_webassets_static_view_cache_control_setting(self):
+        from pyramid_webassets import get_webassets_env_from_settings
+
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.static_view': True,
+            'webassets.cache_max_age': 3600,
+        }
+
+        env = get_webassets_env_from_settings(settings)
+
+        assert env != None
+        assert env.config['static_view'] == settings['webassets.static_view']
+        assert env.config['cache_max_age'] == settings['webassets.cache_max_age']
