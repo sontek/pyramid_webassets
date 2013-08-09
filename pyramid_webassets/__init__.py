@@ -1,4 +1,3 @@
-import glob
 from os import path
 
 from pyramid.path           import AssetResolver
@@ -16,24 +15,23 @@ class PyramidResolver(Resolver):
         super(PyramidResolver, self).__init__(env)
         self.resolver = AssetResolver(None)
 
-    def search_for_source(self, item):
-        try:
-            item = self.resolver.resolve(item).abspath()
-        except ImportError as e:
-            raise BundleError(e)
-        except ValueError as e:
-            return super(PyramidResolver, self).search_for_source(item)
-
-        # Take care of globs
-        if glob.has_magic(item):
-            return [
-                filename
-                for filename
-                in glob.iglob(item)
-                if not path.isdir(item)
-            ]
+    def _split_asset_spec(self, item):
+        if ':' in item:
+            package, filepath = item.split(':', 1)
+            try:
+                package = self.resolver.resolve('%s:' % package).abspath()
+            except ImportError as e:
+                raise BundleError(e)
+            return (package, filepath)
         else:
-            return item
+            return (None, item)
+
+    def search_for_source(self, item):
+        package, filepath = self._split_asset_spec(item)
+        if package is None:
+            return super(PyramidResolver, self).search_for_source(filepath)
+        else:
+            return self.consider_single_directory(package, filepath)
 
     def resolve_source_to_url(self, filepath, item):
         request = get_current_request()

@@ -369,6 +369,23 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         assert domain in urls[0]
         assert len(urls) == 1
 
+    def test_assec_spec_globbing(self):
+        from webassets import Bundle
+
+        self.create_files({
+            'static/__init__.py': '',
+            'static/zing.css':
+            '* { text-decoration: underline }',
+            'static/zang.css':
+            '* { text-decoration: underline }'})
+        asset_spec = 'static:z*ng.css'
+        bundle = Bundle(asset_spec)
+
+        urls = bundle.urls(self.env)
+        assert len(urls) == 2
+        assert 'http://example.com/static/zing.css' in urls
+        assert 'http://example.com/static/zang.css' in urls
+
     def test_webassets_static_view_setting(self):
         from pyramid_webassets import get_webassets_env_from_settings
 
