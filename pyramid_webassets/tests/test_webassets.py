@@ -328,9 +328,8 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         with self.assertRaises(BundleError) as cm:
             bundle.urls(self.env)
 
-        assert cm.exception.message == "The asset %s does not exist" % (
-            self.tempdir+'/static/webassets-external/zing.css'
-        )
+        fname = self.tempdir+'/dotted/package/name/static/zing.css'
+        assert str(cm.exception.message) == ("'%s' does not exist" % (fname,))
 
     def test_asset_spec_missing_package(self):
         from webassets import Bundle
