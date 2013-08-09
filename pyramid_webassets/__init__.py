@@ -213,10 +213,10 @@ def includeme(config):
     config.add_directive('get_webassets_env', get_webassets_env)
     config.add_directive('add_webassets_setting', add_setting)
 
-    if assets_env.config['static_view']:    
+    if assets_env.config['static_view']:
         config.add_static_view(
-            assets_env.url, 
-            assets_env.directory, 
+            assets_env.url,
+            assets_env.directory,
             cache_max_age=assets_env.config['cache_max_age']
         )
 
