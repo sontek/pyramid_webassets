@@ -236,6 +236,36 @@ class TestWebAssets(unittest.TestCase):
 
         assert env != None
 
+    def test_webassets_static_view_setting(self):
+        from pyramid_webassets import get_webassets_env_from_settings
+
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.static_view': True,
+        }
+
+        env = get_webassets_env_from_settings(settings)
+
+        assert env != None
+        assert env.config['static_view'] == settings['webassets.static_view']
+
+    def test_webassets_static_view_cache_control_setting(self):
+        from pyramid_webassets import get_webassets_env_from_settings
+
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.static_view': True,
+            'webassets.cache_max_age': 3600,
+        }
+
+        env = get_webassets_env_from_settings(settings)
+
+        assert env != None
+        assert env.config['static_view'] == settings['webassets.static_view']
+        assert env.config['cache_max_age'] == settings['webassets.cache_max_age']
+
 
 class TestAssetSpecs(TempDirHelper, unittest.TestCase):
     # Mask the methods from TempDirHelper, pytest will try to call them without
@@ -403,36 +433,6 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         assert len(urls) == 2
         assert 'http://example.com/static/zing.css' in urls
         assert 'http://example.com/static/zang.css' in urls
-
-    def test_webassets_static_view_setting(self):
-        from pyramid_webassets import get_webassets_env_from_settings
-
-        settings = {
-            'webassets.base_url': '/static',
-            'webassets.base_dir': os.getcwd(),
-            'webassets.static_view': True,
-        }
-
-        env = get_webassets_env_from_settings(settings)
-
-        assert env != None
-        assert env.config['static_view'] == settings['webassets.static_view']
-
-    def test_webassets_static_view_cache_control_setting(self):
-        from pyramid_webassets import get_webassets_env_from_settings
-
-        settings = {
-            'webassets.base_url': '/static',
-            'webassets.base_dir': os.getcwd(),
-            'webassets.static_view': True,
-            'webassets.cache_max_age': 3600,
-        }
-
-        env = get_webassets_env_from_settings(settings)
-
-        assert env != None
-        assert env.config['static_view'] == settings['webassets.static_view']
-        assert env.config['cache_max_age'] == settings['webassets.cache_max_age']
 
     def test_asset_spec_load_path_and_mapping(self):
         from webassets import Bundle
