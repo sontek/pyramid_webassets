@@ -251,7 +251,8 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         self.request = testing.DummyRequest()
         self.config = testing.setUp(request=self.request, settings={
                 'webassets.base_url': '/static',
-                'webassets.base_dir': self.tempdir+'/static'})
+                'webassets.base_dir': self.tempdir+'/static',
+                'webassets.static_view': True,})
         self.config.include('pyramid_webassets')
 
         self.env = get_webassets_env(self.config)
