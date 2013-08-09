@@ -297,7 +297,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         self.request.static_url.assert_called_with(path)
         assert urls == ['http://example.com/foo/']
 
-    def test_asset_spec_is_resolved(self):
+    def test_asset_spec_source_is_resolved(self):
         from webassets import Bundle
 
         self.create_files({
@@ -311,6 +311,24 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
 
         urls = bundle.urls(self.env)
         assert urls == ['http://example.com/static/gen/zung.css']
+        urls[0] = urls[0][len(self.request.application_url):]
+        assert file(self.tempdir+urls[0]).read() == '* { text-decoration: underline }'
+
+    def test_asset_spec_output_is_resolved(self):
+        from webassets import Bundle
+
+        self.create_files({
+            'static/__init__.py': '',
+            'dotted/__init__.py': '',
+            'dotted/package/__init__.py': '',
+            'dotted/package/name/__init__.py': '',
+            'dotted/package/name/static/zing.css':
+            '* { text-decoration: underline }'})
+        asset_spec = 'dotted.package.name:static/zing.css'
+        bundle = Bundle(asset_spec, output='static:zung.css')
+
+        urls = bundle.urls(self.env)
+        assert urls == ['http://example.com/static/zung.css']
         urls[0] = urls[0][len(self.request.application_url):]
         assert file(self.tempdir+urls[0]).read() == '* { text-decoration: underline }'
 

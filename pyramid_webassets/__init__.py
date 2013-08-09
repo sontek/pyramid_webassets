@@ -46,12 +46,28 @@ class PyramidResolver(Resolver):
             item
         )
 
+    def resolve_output_to_path(self, target, bundle):
+        package, filepath = self._split_asset_spec(target)
+        if package is not None:
+            target = path.join(package, filepath)
+        return super(PyramidResolver, self).resolve_output_to_path(
+            target,
+            bundle
+        )
+
     def resolve_output_to_url(self, item):
         request = get_current_request()
 
+        package, filepath = self._split_asset_spec(item)
+        if package is not None:
+            item = path.join(package, filepath)
+        else:
+            if not path.isabs(filepath):
+                item = path.join(self.env.directory, filepath)
+
         if request is not None:
             try:
-                url = request.static_url(self.search_for_source(item))
+                url = request.static_url(item)
                 return url
             except ValueError:
                 pass
