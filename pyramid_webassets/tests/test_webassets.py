@@ -433,3 +433,21 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         assert env != None
         assert env.config['static_view'] == settings['webassets.static_view']
         assert env.config['cache_max_age'] == settings['webassets.cache_max_age']
+
+    def test_asset_spec_load_path_and_mapping(self):
+        from webassets import Bundle
+
+        asset_path = self.tempdir + '/dotted/package/name/static/'
+        self.env.append_path(asset_path, 'http://static.example.com')
+
+        self.create_files({
+            'dotted/__init__.py': '',
+            'dotted/package/__init__.py': '',
+            'dotted/package/name/__init__.py': '',
+            'dotted/package/name/static/zing.css':
+            '* { text-decoration: underline }'})
+        asset_spec = 'dotted.package.name:static/zing.css'
+        bundle = Bundle(asset_spec, output=asset_spec.replace('zing', 'zung'))
+
+        urls = bundle.urls(self.env)
+        assert urls == ['http://static.example.com/zung.css']
