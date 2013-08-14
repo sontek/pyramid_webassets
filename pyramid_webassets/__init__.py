@@ -1,4 +1,3 @@
-import glob
 from os import path
 
 from pyramid.path           import AssetResolver
@@ -16,64 +15,64 @@ class PyramidResolver(Resolver):
         super(PyramidResolver, self).__init__(env)
         self.resolver = AssetResolver(None)
 
-    def search_for_source(self, item):
-        try:
-            item = self.resolver.resolve(item).abspath()
-        except ImportError as e:
-            raise BundleError(e)
-        except ValueError as e:
-            return super(PyramidResolver, self).search_for_source(item)
-
-        # Take care of globs
-        if glob.has_magic(item):
-            return [
-                filename
-                for filename
-                in glob.iglob(item)
-                if not path.isdir(item)
-            ]
+    def _split_asset_spec(self, item):
+        if ':' in item:
+            package, filepath = item.split(':', 1)
+            try:
+                package = self.resolver.resolve('%s:' % package).abspath()
+            except ImportError as e:
+                raise BundleError(e)
+            return (package, filepath)
         else:
-            return item
+            return (None, item)
+
+    def search_for_source(self, item):
+        package, filepath = self._split_asset_spec(item)
+        if package is None:
+            return super(PyramidResolver, self).search_for_source(filepath)
+        else:
+            return self.consider_single_directory(package, filepath)
 
     def resolve_source_to_url(self, filepath, item):
         request = get_current_request()
 
-        if ':' in item:
-            # webassets gives us an absolute path to the source file
-            # If the input item that generate this path was an asset spec
-            # try to resolve the package and recreate the asset spec to use
-            # for the static route generation.
-            package = item[:item.find(':')]
-            package_path = self.resolver.resolve('%s:' % package).abspath()
-            filepath = filepath.replace(package_path, '').strip('/')
-            spec = '%s:%s' % (package, filepath)
-        else:
-            spec = filepath
+        if request is not None:
+            try:
+                return request.static_url(filepath)
+            except ValueError:
+                pass
+        return super(PyramidResolver, self).resolve_source_to_url(
+            filepath,
+            item
+        )
 
-        return request.static_url(spec)
+    def resolve_output_to_path(self, target, bundle):
+        package, filepath = self._split_asset_spec(target)
+        if package is not None:
+            target = path.join(package, filepath)
+        return super(PyramidResolver, self).resolve_output_to_path(
+            target,
+            bundle
+        )
 
     def resolve_output_to_url(self, item):
-        if not path.isabs(item):
-            item = path.join(self.env.directory, item)
+        request = get_current_request()
 
-        try:
-            request = get_current_request()
+        package, filepath = self._split_asset_spec(item)
+        if package is not None:
+            item = path.join(package, filepath)
+        else:
+            if not path.isabs(filepath):
+                item = path.join(self.env.directory, filepath)
 
-            url = request.static_url(self.search_for_source(item))
+        if request is not None:
+            try:
+                url = request.static_url(item)
+                return url
+            except ValueError:
+                pass
 
-            return url
-        except ValueError as e:
-            if ':' in item:
-                e.message += '(%s)' % item
-            raise BundleError(e)
-        except AttributeError as e: # pragma: no cover
-            if e.message == "'NoneType' object has no attribute 'static_url'":
-                # render() has been called outside of a request
-                # e.g., to compile assets before handling requests
-                # and so failure is acceptable
-                pass 
-            else:
-                raise
+        return super(PyramidResolver, self).resolve_output_to_url(item)
 
 class Environment(Environment):
     resolver_class = PyramidResolver
@@ -213,10 +212,10 @@ def includeme(config):
     config.add_directive('get_webassets_env', get_webassets_env)
     config.add_directive('add_webassets_setting', add_setting)
 
-    if assets_env.config['static_view']:    
+    if assets_env.config['static_view']:
         config.add_static_view(
-            assets_env.url, 
-            assets_env.directory, 
+            assets_env.url,
+            assets_env.directory,
             cache_max_age=assets_env.config['cache_max_age']
         )
 

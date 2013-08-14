@@ -236,6 +236,36 @@ class TestWebAssets(unittest.TestCase):
 
         assert env != None
 
+    def test_webassets_static_view_setting(self):
+        from pyramid_webassets import get_webassets_env_from_settings
+
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.static_view': True,
+        }
+
+        env = get_webassets_env_from_settings(settings)
+
+        assert env != None
+        assert env.config['static_view'] == settings['webassets.static_view']
+
+    def test_webassets_static_view_cache_control_setting(self):
+        from pyramid_webassets import get_webassets_env_from_settings
+
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.static_view': True,
+            'webassets.cache_max_age': 3600,
+        }
+
+        env = get_webassets_env_from_settings(settings)
+
+        assert env != None
+        assert env.config['static_view'] == settings['webassets.static_view']
+        assert env.config['cache_max_age'] == settings['webassets.cache_max_age']
+
 
 class TestAssetSpecs(TempDirHelper, unittest.TestCase):
     # Mask the methods from TempDirHelper, pytest will try to call them without
@@ -251,7 +281,8 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         self.request = testing.DummyRequest()
         self.config = testing.setUp(request=self.request, settings={
                 'webassets.base_url': '/static',
-                'webassets.base_dir': self.tempdir+'/static'})
+                'webassets.base_dir': self.tempdir+'/static',
+                'webassets.static_view': True,})
         self.config.include('pyramid_webassets')
 
         self.env = get_webassets_env(self.config)
@@ -296,7 +327,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         self.request.static_url.assert_called_with(path)
         assert urls == ['http://example.com/foo/']
 
-    def test_asset_spec_is_resolved(self):
+    def test_asset_spec_source_is_resolved(self):
         from webassets import Bundle
 
         self.create_files({
@@ -310,6 +341,24 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
 
         urls = bundle.urls(self.env)
         assert urls == ['http://example.com/static/gen/zung.css']
+        urls[0] = urls[0][len(self.request.application_url):]
+        assert file(self.tempdir+urls[0]).read() == '* { text-decoration: underline }'
+
+    def test_asset_spec_output_is_resolved(self):
+        from webassets import Bundle
+
+        self.create_files({
+            'static/__init__.py': '',
+            'dotted/__init__.py': '',
+            'dotted/package/__init__.py': '',
+            'dotted/package/name/__init__.py': '',
+            'dotted/package/name/static/zing.css':
+            '* { text-decoration: underline }'})
+        asset_spec = 'dotted.package.name:static/zing.css'
+        bundle = Bundle(asset_spec, output='static:zung.css')
+
+        urls = bundle.urls(self.env)
+        assert urls == ['http://example.com/static/zung.css']
         urls[0] = urls[0][len(self.request.application_url):]
         assert file(self.tempdir+urls[0]).read() == '* { text-decoration: underline }'
 
@@ -327,9 +376,8 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         with self.assertRaises(BundleError) as cm:
             bundle.urls(self.env)
 
-        assert cm.exception.message == "The asset %s does not exist" % (
-            self.tempdir+'/static/webassets-external/zing.css'
-        )
+        fname = self.tempdir+'/dotted/package/name/static/zing.css'
+        assert str(cm.exception.message) == ("'%s' does not exist" % (fname,))
 
     def test_asset_spec_missing_package(self):
         from webassets import Bundle
@@ -369,32 +417,37 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         assert domain in urls[0]
         assert len(urls) == 1
 
-    def test_webassets_static_view_setting(self):
-        from pyramid_webassets import get_webassets_env_from_settings
+    def test_assec_spec_globbing(self):
+        from webassets import Bundle
 
-        settings = {
-            'webassets.base_url': '/static',
-            'webassets.base_dir': os.getcwd(),
-            'webassets.static_view': True,
-        }
+        self.create_files({
+            'static/__init__.py': '',
+            'static/zing.css':
+            '* { text-decoration: underline }',
+            'static/zang.css':
+            '* { text-decoration: underline }'})
+        asset_spec = 'static:z*ng.css'
+        bundle = Bundle(asset_spec)
 
-        env = get_webassets_env_from_settings(settings)
+        urls = bundle.urls(self.env)
+        assert len(urls) == 2
+        assert 'http://example.com/static/zing.css' in urls
+        assert 'http://example.com/static/zang.css' in urls
 
-        assert env != None
-        assert env.config['static_view'] == settings['webassets.static_view']
+    def test_asset_spec_load_path_and_mapping(self):
+        from webassets import Bundle
 
-    def test_webassets_static_view_cache_control_setting(self):
-        from pyramid_webassets import get_webassets_env_from_settings
+        asset_path = self.tempdir + '/dotted/package/name/static/'
+        self.env.append_path(asset_path, 'http://static.example.com')
 
-        settings = {
-            'webassets.base_url': '/static',
-            'webassets.base_dir': os.getcwd(),
-            'webassets.static_view': True,
-            'webassets.cache_max_age': 3600,
-        }
+        self.create_files({
+            'dotted/__init__.py': '',
+            'dotted/package/__init__.py': '',
+            'dotted/package/name/__init__.py': '',
+            'dotted/package/name/static/zing.css':
+            '* { text-decoration: underline }'})
+        asset_spec = 'dotted.package.name:static/zing.css'
+        bundle = Bundle(asset_spec, output=asset_spec.replace('zing', 'zung'))
 
-        env = get_webassets_env_from_settings(settings)
-
-        assert env != None
-        assert env.config['static_view'] == settings['webassets.static_view']
-        assert env.config['cache_max_age'] == settings['webassets.cache_max_age']
+        urls = bundle.urls(self.env)
+        assert urls == ['http://static.example.com/zung.css']
