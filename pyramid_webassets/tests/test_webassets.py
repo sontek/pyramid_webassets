@@ -183,7 +183,7 @@ class TestWebAssets(unittest.TestCase):
         with self.assertRaises(Exception) as cm:
             get_webassets_env_from_settings(settings, prefix='webassets')
 
-            assert cm.exception.message == "You need to provide webassets.base_dir in your configuration"
+        assert cm.exception.message == "You need to provide webassets.base_dir in your configuration"
 
     def test_includeme(self):
         from pyramid_webassets import includeme
@@ -395,7 +395,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         with self.assertRaises(BundleError) as cm:
             bundle.urls(self.env)
 
-            assert cm.exception.args[0].message == 'No module named rabbits'
+        assert cm.exception.args[0].message == 'No module named rabbits'
 
     def test_asset_spec_no_static_view(self):
         from webassets import Bundle
