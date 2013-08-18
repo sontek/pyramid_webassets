@@ -78,6 +78,33 @@ webassets.less_run_in_debug     = true
 webassets.less_extra_args       = json:["--line-numbers=mediaquery", "-O2"]
 ```
 
+Use asset specs instead of files and urls
+----------------------------------------------
+It's possible to use an asset specifications (package:file) instead of simple file names.
+
+- If the asset specifications declares a path outside the base_dir, the file will be copied.
+- Otherwise, it will work like a normal bundle file.
+
+If files are bundled from other packages and those packages act like pyramid
+plugins adding their own ``add_static_view``, webassets will use those static
+view urls to show the individual files if needed (for example, in development mode).
+
+If you have defined your own static route and you want to use it with webassets,
+for example:
+
+``` python
+config.add_static_view('/static-stuff', 'my.super.app:static')
+```
+
+Setting the base url configuration option to an asset specification:
+
+```
+base_url = my.super.app:static
+```
+
+Will make webassets use the ``/static-stuff`` route for your assets. Note:
+the absolute or relative path depends on where is your application is deployed.
+
 Use with templates
 ========================
 Included are helpers that you can use with your templates. Additional helpers
