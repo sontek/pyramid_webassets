@@ -1,8 +1,33 @@
 import unittest
 import os
+import re
+
 from mock import Mock
 from pyramid import testing
-from webassets.test import TempDirHelper
+import pytest
+from webassets.test import TempDirHelper as WebassetsTempDirHelper
+
+
+class TempDirHelper(WebassetsTempDirHelper):
+    def setup(self):
+        super(TempDirHelper, self).setup()
+        import sys
+        sys.path.append(self.tempdir)
+
+    def teardown(self):
+        super(TempDirHelper, self).teardown()
+
+        import sys
+        # remove tempdir path elements
+        for pth in sys.path:
+            if pth.startswith(self.tempdir):
+                sys.path.remove(pth)
+
+        # remove tempdir modules
+        for name,module in sys.modules.items():
+            if module is not None:
+                if getattr(module, '__file__', '').startswith(self.tempdir):
+                    del sys.modules[name]
 
 
 class TestWebAssets(unittest.TestCase):
@@ -658,3 +683,102 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         self.assertEqual(env.config.get('bundles'), None)
         self.assertIsNotNone(env['mycss'])
         self.assertEqual(env._named_bundles.keys(), ['mycss'])
+
+
+class TestBaseUrlBehvior(object):
+    """
+    Tests related to the base_url with asset specs and static_view
+    """
+    view_actions = {
+        None: (False, False),
+        'automatic': (True, False),
+        'manual': (False, True)}
+
+    def setup_method(self, method):
+        self.temp = TempDirHelper()
+        self.temp.setup()
+        empty_css = '* {color:black}'
+        self.temp.create_files({
+            'static/__init__.py': '',
+            'static/t.css': empty_css,
+            'mypkg/__init__.py': '',
+            'mypkg/static/t.css': empty_css})
+
+    def teardown_method(self, method):
+        testing.tearDown()
+        self.temp.teardown()
+
+    def build_env(self, base_url, static_view):
+        from pyramid_webassets import get_webassets_env
+
+        automatic_view, manual_view = self.view_actions[static_view]
+        base_dir = '/static' if not manual_view else '/mypkg'
+
+        self.request = testing.DummyRequest()
+        self.config = testing.setUp(request=self.request, settings={
+            'webassets.base_url': base_url,
+            'webassets.base_dir': self.temp.tempdir + base_dir,
+            'webassets.static_view': automatic_view})
+        self.config.include('pyramid_webassets')
+
+        if manual_view:
+            self.config.add_static_view('static', 'mypkg:static')
+
+        self.env = get_webassets_env(self.config)
+        # Disable cache busting
+        self.env.url_expire = False
+        return self.env
+
+    def format_expected(self, expected, webasset):
+        """
+        Formats the expected url when the webasset is external
+        """
+        from pyramid.path import AssetResolver
+
+        if '%' not in expected:
+            return expected
+
+        if ':' in webasset:
+            name = AssetResolver(None).resolve(webasset).abspath()
+        else:
+            name = self.temp.tempdir + '/static/' + webasset
+        hashed_filename = hash(name) & ((1 << 64) - 1)
+        external = 'webassets-external/%s_' % hashed_filename
+        return expected % {'external': external}
+
+    @pytest.mark.parametrize(
+        ('base_url', 'static_view', 'webasset', 'expected'),
+        [('/static', None, 't.css', '/static/t.css'),
+         ('/static', 'automatic', 't.css', 'http://example.com/static/t.css'),
+         ('/static', None, 'mypkg:static/t.css', '/static/%(external)st.css'),
+         ('/static', None, 'static:t.css', '/static/t.css'),
+         # If base_url is an asset spec, but webassets are files
+         ('static:some', 'manual', 'static/t.css', 'static/t.css'),
+         ('static:some', None, 't.css', 't.css'),
+         # base_url as asset spec, but webasset is asset spec with route
+         ('mypkg:some', 'manual', 'mypkg:static/t.css',
+          'http://example.com/static/t.css'),
+         # base_url as asset spec, but webasset is asset spec without route
+         ('static:some', None, 'static:t.css', 't.css'),
+         # base_url as asset spec, but webasset is asset spec automatic route
+         ('static:some', 'automatic', 'static:t.css', 't.css'),
+         # Work a bit the resolve output (o.css will activate the output=o.css)
+         ('mypkg:static', 'manual', 'mypkg:static/t.css',
+          'http://example.com/static/o.css')]
+    )
+    def test_url(self, base_url, static_view, webasset, expected):
+        """
+        Test final urls
+
+        Special notes on the parametrized variables:
+        - expected file, if it ends in o.css, it setups output in the bundle
+        - static_view set to manual changes also the base_dir to /mypkg instead
+          of /static
+        """
+        from webassets import Bundle
+
+        expected = self.format_expected(expected, webasset)
+        params = {} if not 'o.css' in expected else {'output': 'o.css'}
+        bundle = Bundle(webasset, **params)
+        res = bundle.urls(self.build_env(base_url, static_view))
+        assert [expected] == res

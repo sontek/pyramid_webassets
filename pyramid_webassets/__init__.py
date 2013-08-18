@@ -128,6 +128,7 @@ class PyramidResolver(Resolver):
 class Environment(Environment):
     resolver_class = PyramidResolver
 
+
 class IWebAssetsEnvironment(Interface):
     pass
 
