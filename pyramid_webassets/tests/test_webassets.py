@@ -158,6 +158,29 @@ class TestWebAssets(unittest.TestCase):
 
         assert env.cache != None
 
+    def test_get_webassets_env_from_settings_with_cache_directory(self):
+        from pyramid_webassets import get_webassets_env_from_settings
+        from uuid import uuid4
+        import shutil
+
+        tmpdir = os.path.join(os.getcwd(), 'test-cache-dir-' + str(uuid4()))
+
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.cache': tmpdir,
+        }
+
+        assert not os.path.isdir(tmpdir)
+
+        env = get_webassets_env_from_settings(settings)
+
+        assert env.cache != None
+        assert env.cache == tmpdir
+        assert os.path.isdir(tmpdir)
+
+        shutil.rmtree(tmpdir)
+
     def test_get_webassets_env_from_settings_prefix_change(self):
         from pyramid_webassets import get_webassets_env_from_settings
 
