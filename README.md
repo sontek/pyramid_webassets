@@ -7,7 +7,7 @@ but we currently support:
  * ``base_url``: The url static assets will be located
  * ``debug``: If webassets should be in debug mode (i.e no compression)
  * ``updater``: Different update configurations (i.e always, timestamp)
- * ``cache``: If we should use webassets cache
+ * ``cache``: If we should use webassets cache (if boolean), or override default path to cache directory
  * ``jst_compiler``: A custom jst compiler, by default it uses underscore
  * ``url_expire``: If a cache-busting query string should be added to URLs
  * ``static_view``: If assets should be registered as a static view using Pyramid config.add_static_view()
@@ -37,7 +37,7 @@ jst = Bundle('templates/*.html',
 config.add_webasset('jst', jst)
 ```
 
- Mako
+Mako
 ====================
 You can use the global webassets tag:
 ``` python
