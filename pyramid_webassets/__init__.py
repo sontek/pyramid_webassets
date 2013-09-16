@@ -1,7 +1,7 @@
-from os import path
+from os import path, makedirs
 
 from pyramid.path           import AssetResolver
-from pyramid.settings       import asbool
+from pyramid.settings       import asbool, truthy
 from pyramid.threadlocal    import get_current_request
 from zope.interface         import Interface
 from webassets              import Bundle
@@ -9,6 +9,8 @@ from webassets.env          import Environment
 from webassets.env          import Resolver
 from webassets.exceptions   import BundleError
 
+falsy = frozenset(('f', 'false', 'n', 'no', 'off', '0'))
+booly = frozenset(list(truthy) + list(falsy))
 
 class PyramidResolver(Resolver):
     def __init__(self, env):
@@ -127,10 +129,12 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
         kwargs['debug'] = dbg
 
     if 'cache' in kwargs:
-        cache = kwargs['cache'].lower()
+        cache = kwargs['cache']
 
-        if cache == 'false' or cache == 'true':
+        if cache.lower() in booly:
             kwargs['cache'] = asbool(kwargs['cache'])
+        elif cache and not path.isdir(cache):
+            makedirs(cache)
 
     # 'updater' is just passed in...
 
