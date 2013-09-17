@@ -1,4 +1,5 @@
 from os import path
+import json
 
 from pyramid.path           import AssetResolver
 from pyramid.settings       import asbool
@@ -168,7 +169,13 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
     else:
         kwargs['cache_max_age'] = None
 
+    paths = kwargs.pop('paths', None)
+
     assets_env = Environment(asset_dir, asset_url, **kwargs)
+
+    if paths is not None:
+        for map_path, map_url in json.loads(paths).items():
+            assets_env.append_path(map_path, map_url)
 
     return assets_env
 
