@@ -169,6 +169,11 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
     else:
         kwargs['cache_max_age'] = None
 
+    if 'load_path' in kwargs:
+        # force load_path to be an array and split on whitespace
+        if not isinstance(kwargs['load_path'], list):
+            kwargs['load_path'] = kwargs['load_path'].split()
+
     paths = kwargs.pop('paths', None)
 
     assets_env = Environment(asset_dir, asset_url, **kwargs)
