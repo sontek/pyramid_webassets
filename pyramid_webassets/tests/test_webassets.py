@@ -289,6 +289,19 @@ class TestWebAssets(unittest.TestCase):
         assert env.config['static_view'] == settings['webassets.static_view']
         assert env.config['cache_max_age'] == settings['webassets.cache_max_age']
 
+    def test_get_webassets_env_from_settings_load_path(self):
+        from pyramid_webassets import get_webassets_env_from_settings
+
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.load_path': '/foo bar/\nbaz'
+        }
+
+        env = get_webassets_env_from_settings(settings)
+
+        assert env.load_path == ['/foo', 'bar/', 'baz']
+
 
 class TestAssetSpecs(TempDirHelper, unittest.TestCase):
     # Mask the methods from TempDirHelper, pytest will try to call them without

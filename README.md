@@ -1,3 +1,29 @@
+Installation
+===================
+
+Install the package:
+
+``` bash
+$ pip install pyramid_webassets
+```
+
+EITHER add it to your Pyramid `production.ini` and `development.ini`:
+
+```
+pyramid.includes =
+    pyramid_debugtoolbar
+    pyramid_tm
+    pyramid_webassets
+```
+
+OR include it when configuring your application, usually in `__init__.py`:
+
+``` python
+def main(global_config, **settings):
+    ...
+    config.include('pyramid_webassets')
+```
+
 Configuration
 ====================
 You are required to set ``base_dir`` and ``base_url``, the rest are optional,
@@ -9,7 +35,7 @@ but we currently support:
  * ``updater``: Different update configurations (i.e always, timestamp)
  * ``cache``: If we should use webassets cache (if boolean), or override default path to cache directory
  * ``jst_compiler``: A custom jst compiler, by default it uses underscore
- * ``url_expire``: If a cache-busting query string should be added to URLs
+ * ``url_expires``: If a cache-busting query string should be added to URLs
  * ``static_view``: If assets should be registered as a static view using Pyramid config.add_static_view()
  * ``cache_max_age``: If static_view is true, this is passed as the static view's cache_max_age argument (allowing control of expires and cache-control headers)
 
@@ -20,7 +46,7 @@ webassets.debug=True
 webassets.updater=timestamp
 webassets.cache=False
 webassets.jst_compiler=Handlebars.compile
-webassets.url_expire=False
+webassets.url_expires=False
 webassets.static_view=True
 webassets.cache_max_age=3600
 ```
