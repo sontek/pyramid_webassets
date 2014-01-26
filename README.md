@@ -39,16 +39,16 @@ but we currently support:
  * ``static_view``: If assets should be registered as a static view using Pyramid config.add_static_view()
  * ``cache_max_age``: If static_view is true, this is passed as the static view's cache_max_age argument (allowing control of expires and cache-control headers)
 
-``` python
-webassets.base_dir=%(here)s/app/static
-webassets.base_url=/static
-webassets.debug=True
-webassets.updater=timestamp
-webassets.cache=False
-webassets.jst_compiler=Handlebars.compile
-webassets.url_expires=False
-webassets.static_view=True
-webassets.cache_max_age=3600
+``` ini
+webassets.base_dir              = %(here)s/app/static
+webassets.base_url              = /static
+webassets.debug                 = True
+webassets.updater               = timestamp
+webassets.cache                 = False
+webassets.jst_compiler          = Handlebars.compile
+webassets.url_expires           = False
+webassets.static_view           = True
+webassets.cache_max_age         = 3600
 ```
 
 Then you can just use config.add_webasset to add bundles to your environment
@@ -62,6 +62,19 @@ jst = Bundle('templates/*.html',
 
 config.add_webasset('jst', jst)
 ```
+
+All other configurations are passed through to webassets, including
+filter settings. These are adjusted as follows: if a value is exactly
+``true`` or ``false``, then it is converted to a boolean; if a value
+is prefixed with the string ``json:``, then it is JSON-parsed. This
+allows pyramid-webassets to handle basic extensible filter
+configurations without needing any python code, for example:
+
+``` ini
+webassets.less_run_in_debug     = true
+webassets.less_extra_args       = json:["--line-numbers=mediaquery", "-O2"]
+```
+
 
 Mako
 ====================
