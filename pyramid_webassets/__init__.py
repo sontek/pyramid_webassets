@@ -1,4 +1,6 @@
 from os import path, makedirs
+import json
+import six
 
 from pyramid.path           import AssetResolver
 from pyramid.settings       import asbool, truthy
@@ -11,6 +13,19 @@ from webassets.exceptions   import BundleError
 
 falsy = frozenset(('f', 'false', 'n', 'no', 'off', '0'))
 booly = frozenset(list(truthy) + list(falsy))
+auto_booly = frozenset(('true', 'false'))
+
+def maybebool(value):
+    '''
+    If `value` is a string type, attempts to convert it to a boolean
+    if it looks like it might be one, otherwise returns the value
+    unchanged. The difference between this and
+    :func:`pyramid.settings.asbool` is how non-bools are handled: this
+    returns the original value, whereas `asbool` returns False.
+    '''
+    if isinstance(value, six.string_types) and value.lower() in booly:
+        return asbool(value)
+    return value
 
 class PyramidResolver(Resolver):
     def __init__(self, env):
@@ -110,7 +125,13 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
     cut_prefix = len(prefix) + 1
     for k in settings:
         if k.startswith(prefix):
-            kwargs[k[cut_prefix:]] = settings[k]
+            val = settings[k]
+            if isinstance(val, six.string_types):
+                if val.lower() in auto_booly:
+                    val = asbool(val)
+                elif val.lower().startswith('json:'):
+                    val = json.loads(val[5:])
+            kwargs[k[cut_prefix:]] = val
 
     if 'base_dir' not in kwargs:
         raise Exception("You need to provide webassets.base_dir in your configuration")
@@ -121,28 +142,18 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
     asset_url = kwargs.pop('base_url')
 
     if 'debug' in kwargs:
-        dbg = kwargs['debug'].lower()
-
-        if dbg in booly:
-            dbg = asbool(dbg)
-
-        kwargs['debug'] = dbg
+        kwargs['debug'] = maybebool(kwargs['debug'])
 
     if 'cache' in kwargs:
-        cache = kwargs['cache']
+        cache = kwargs['cache'] = maybebool(kwargs['cache'])
 
-        if cache.lower() in booly:
-            kwargs['cache'] = asbool(kwargs['cache'])
-        elif cache and not path.isdir(cache):
+        if cache and isinstance(cache, six.string_types) and not path.isdir(cache):
             makedirs(cache)
 
     # 'updater' is just passed in...
 
     if 'auto_build' in kwargs:
-        auto_build = kwargs['auto_build'].lower()
-
-        if auto_build in booly:
-            kwargs['auto_build'] = asbool(kwargs['auto_build'])
+        kwargs['auto_build'] = maybebool(kwargs['auto_build'])
 
     if 'jst_compiler' in kwargs:
         kwargs['JST_COMPILER'] = kwargs.pop('jst_compiler')
@@ -151,16 +162,10 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
         kwargs['JST_NAMESPACE'] = kwargs.pop('jst_namespace')
 
     if 'manifest' in kwargs:
-        manifest = kwargs['manifest'].lower()
-
-        if manifest in falsy or manifest == 'none':
-            kwargs['manifest'] = asbool(kwargs['manifest'])
+        kwargs['manifest'] = maybebool(kwargs['manifest'])
 
     if 'url_expire' in kwargs:
-        url_expire = kwargs['url_expire'].lower()
-
-        if url_expire in booly:
-            kwargs['url_expire'] = asbool(kwargs['url_expire'])
+        kwargs['url_expire'] = maybebool(kwargs['url_expire'])
 
     if 'static_view' in kwargs:
         kwargs['static_view'] = asbool(kwargs['static_view'])
