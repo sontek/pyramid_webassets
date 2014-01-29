@@ -1,8 +1,8 @@
-from os import path
+from os import path, makedirs
 import json
 
 from pyramid.path           import AssetResolver
-from pyramid.settings       import asbool
+from pyramid.settings       import asbool, truthy
 from pyramid.threadlocal    import get_current_request
 from zope.interface         import Interface
 from webassets              import Bundle
@@ -10,6 +10,8 @@ from webassets.env          import Environment
 from webassets.env          import Resolver
 from webassets.exceptions   import BundleError
 
+falsy = frozenset(('f', 'false', 'n', 'no', 'off', '0'))
+booly = frozenset(list(truthy) + list(falsy))
 
 class PyramidResolver(Resolver):
     def __init__(self, env):
@@ -122,23 +124,25 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
     if 'debug' in kwargs:
         dbg = kwargs['debug'].lower()
 
-        if dbg == 'false' or dbg == 'true':
+        if dbg in booly:
             dbg = asbool(dbg)
 
         kwargs['debug'] = dbg
 
     if 'cache' in kwargs:
-        cache = kwargs['cache'].lower()
+        cache = kwargs['cache']
 
-        if cache == 'false' or cache == 'true':
+        if cache.lower() in booly:
             kwargs['cache'] = asbool(kwargs['cache'])
+        elif cache and not path.isdir(cache):
+            makedirs(cache)
 
     # 'updater' is just passed in...
 
     if 'auto_build' in kwargs:
         auto_build = kwargs['auto_build'].lower()
 
-        if auto_build == 'false' or auto_build == 'true':
+        if auto_build in booly:
             kwargs['auto_build'] = asbool(kwargs['auto_build'])
 
     if 'jst_compiler' in kwargs:
@@ -150,13 +154,13 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
     if 'manifest' in kwargs:
         manifest = kwargs['manifest'].lower()
 
-        if manifest == 'false' or manifest == 'none':
+        if manifest in falsy or manifest == 'none':
             kwargs['manifest'] = asbool(kwargs['manifest'])
 
     if 'url_expire' in kwargs:
         url_expire = kwargs['url_expire'].lower()
 
-        if url_expire == 'false' or url_expire == 'true':
+        if url_expire in booly:
             kwargs['url_expire'] = asbool(kwargs['url_expire'])
 
     if 'static_view' in kwargs:
