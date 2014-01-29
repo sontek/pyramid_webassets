@@ -347,6 +347,26 @@ class TestWebAssets(unittest.TestCase):
 
         assert env.load_path == ['/foo', 'bar/', 'baz']
 
+    def test_auto_bool(self):
+        from pyramid_webassets import get_webassets_env_from_settings
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.less_run_in_debug': 'true',
+        }
+        env = get_webassets_env_from_settings(settings)
+        assert env.config['less_run_in_debug'] == True
+
+    def test_auto_json(self):
+        from pyramid_webassets import get_webassets_env_from_settings
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.less_extra_args': 'json:["--foo", "--bar"]',
+        }
+        env = get_webassets_env_from_settings(settings)
+        assert env.config['less_extra_args'] == ['--foo', '--bar']
+
 
 class TestAssetSpecs(TempDirHelper, unittest.TestCase):
     # Mask the methods from TempDirHelper, pytest will try to call them without
