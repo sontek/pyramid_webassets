@@ -15,6 +15,10 @@ with open(os.path.join(here, 'CHANGES.txt')) as fp:
 #requires = open('requirements.txt').readlines()
 requires = ['pyramid>=1.3', 'webassets>=0.7.1', 'zope.interface', 'six>=1.4.1']
 
+extras_require = {
+  'bundles-yaml': 'PyYAML>=3.10',
+}
+
 class PyTest(Command):
     user_options = []
     def initialize_options(self):
@@ -45,6 +49,7 @@ setup(name='pyramid_webassets',
       zip_safe=False,
       test_suite='pyramid_webassets',
       install_requires=requires,
+      extras_require=extras_require,
       tests_require=['pytest', 'mock', 'unittest2'],
       cmdclass={'test': PyTest},
       )

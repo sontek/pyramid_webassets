@@ -10,6 +10,7 @@ from webassets              import Bundle
 from webassets.env          import Environment
 from webassets.env          import Resolver
 from webassets.exceptions   import BundleError
+from webassets.loaders      import YAMLLoader
 
 falsy = frozenset(('f', 'false', 'n', 'no', 'off', '0'))
 booly = frozenset(list(truthy) + list(falsy))
@@ -182,7 +183,20 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
         if not isinstance(kwargs['load_path'], list):
             kwargs['load_path'] = kwargs['load_path'].split()
 
+    bundles = kwargs.pop('bundles', None)
+
     assets_env = Environment(asset_dir, asset_url, **kwargs)
+
+    if bundles is not None:
+        if isinstance(bundles, six.string_types):
+            if path.exists(bundles):
+                with open(bundles, 'rb') as fp:
+                    bundles = YAMLLoader(fp).load_bundles()
+            else:
+                asset = assets_env.resolver.resolver.resolve(bundles)
+                bundles = YAMLLoader(asset.stream()).load_bundles()
+        for name, bundle in bundles.items():
+            assets_env.register(name, bundle)
 
     return assets_env
 
