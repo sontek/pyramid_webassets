@@ -190,12 +190,11 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
     if bundles is not None:
         if isinstance(bundles, six.string_types):
             if path.exists(bundles):
-                with open(bundles, 'rb') as fp:
-                    bundles = YAMLLoader(fp).load_bundles()
+                loader = YAMLLoader(open(bundles, 'rb'))
             else:
                 asset = assets_env.resolver.resolver.resolve(bundles)
-                bundles = YAMLLoader(asset.stream()).load_bundles()
-        for name, bundle in bundles.items():
+                loader = YAMLLoader(asset.stream())
+        for name, bundle in loader.load_bundles(assets_env).items():
             assets_env.register(name, bundle)
 
     return assets_env
