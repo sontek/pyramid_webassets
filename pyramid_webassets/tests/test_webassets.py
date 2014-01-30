@@ -473,7 +473,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         assert domain in urls[0]
         assert len(urls) == 1
 
-    def test_assec_spec_globbing(self):
+    def test_asset_spec_globbing(self):
         from webassets import Bundle
 
         self.create_files({
