@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import os
 
 from setuptools import setup, find_packages, Command
@@ -11,7 +13,7 @@ with open(os.path.join(here, 'CHANGES.txt')) as fp:
     CHANGES = fp.read()
 
 #requires = open('requirements.txt').readlines()
-requires = ['pyramid>=1.3', 'webassets>=0.7.1', 'zope.interface']
+requires = ['pyramid>=1.3', 'webassets>=0.7.1', 'zope.interface', 'six>=1.4.1']
 
 class PyTest(Command):
     user_options = []
@@ -25,7 +27,7 @@ class PyTest(Command):
         raise SystemExit(errno)
 
 setup(name='pyramid_webassets',
-      version='0.7.1',
+      version='0.7.2',
       description='pyramid_webassets',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
