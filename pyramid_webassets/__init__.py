@@ -129,7 +129,7 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
             if isinstance(val, six.string_types):
                 if val.lower() in auto_booly:
                     val = asbool(val)
-                elif val.lower().startswith('json:'):
+                elif val.lower().startswith('json:') and k[cut_prefix:] != 'manifest':
                     val = json.loads(val[5:])
             kwargs[k[cut_prefix:]] = val
 
