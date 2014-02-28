@@ -103,6 +103,7 @@ If you are using Jinja2, you can just do the following configuration (this assum
 ``` python
 config.add_jinja2_extension('webassets.ext.jinja2.AssetsExtension')
 assets_env = config.get_webassets_env()
+jinja2_env = config.get_jinja2_environment()
 jinja2_env.assets_environment = assets_env
 ```
 and then:
