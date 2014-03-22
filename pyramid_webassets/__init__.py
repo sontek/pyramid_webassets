@@ -1,3 +1,4 @@
+from contextlib import closing
 from os import path, makedirs
 import json
 import six
@@ -183,19 +184,28 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
         if not isinstance(kwargs['load_path'], list):
             kwargs['load_path'] = kwargs['load_path'].split()
 
-    bundles = kwargs.pop('bundles', None)
+    if 'bundles' in kwargs:
+        if isinstance(kwargs['bundles'], six.string_types):
+            kwargs['bundles'] = kwargs['bundles'].split()
 
+    bundles = kwargs.pop('bundles', None)
     assets_env = Environment(asset_dir, asset_url, **kwargs)
 
-    if bundles is not None:
-        if isinstance(bundles, six.string_types):
-            if path.exists(bundles):
-                loader = YAMLLoader(open(bundles, 'rb'))
-            else:
-                asset = assets_env.resolver.resolver.resolve(bundles)
-                loader = YAMLLoader(asset.stream())
-        for name, bundle in loader.load_bundles(assets_env).items():
-            assets_env.register(name, bundle)
+    def yaml_stream(fname):
+        if path.exists(fname):
+            return open(fname, 'rb')
+        else:
+            return assets_env.resolver.resolver.resolve(fname).stream()
+
+    if isinstance(bundles, list):
+        loaded = {}
+        for bpath in bundles:
+            with closing(yaml_stream(bpath)) as s:
+                loader = YAMLLoader(s)
+                loaded.update(loader.load_bundles(assets_env))
+        assets_env.register(loaded)
+    elif isinstance(bundles, dict):
+        assets_env.register(bundles)
 
     return assets_env
 

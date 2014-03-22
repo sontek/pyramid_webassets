@@ -525,6 +525,29 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         self.assertIsNotNone(env['mycss'])
         self.assertEqual(env._named_bundles.keys(), ['mycss'])
 
+    def test_bundles_yamlloader_list(self):
+        try:
+            import yaml
+        except ImportError:
+            raise unittest.SkipTest('PyYAML not installed')
+        from pyramid_webassets import get_webassets_env_from_settings
+        settings = {
+            'webassets.base_url' : '/static',
+            'webassets.base_dir' : os.getcwd(),
+            'webassets.bundles'  : 'dotted.package.name:foo/bar.yaml ' \
+                                   'dotted.package.name:foo/baz.yaml',
+        }
+        self.create_files({
+            'dotted/__init__.py': '',
+            'dotted/package/__init__.py': '',
+            'dotted/package/name/__init__.py': '',
+            'dotted/package/name/foo/bar.yaml': 'mycss: {contents: style/mycss.css}',
+            'dotted/package/name/foo/baz.yaml': 'myjs: {contents js/myjs.js}',
+        })
+        env = get_webassets_env_from_settings(settings)
+        self.assertEqual(env.config.get('bundles'), None)
+        self.assertIsNotNone(env['mycss'])
+        self.assertEqual(sorted(env._named_bundles.keys()), ['mycss', 'myjs'])
 
     def test_bundles_yamlloader_asset(self):
         try:
