@@ -184,12 +184,19 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
         if not isinstance(kwargs['load_path'], list):
             kwargs['load_path'] = kwargs['load_path'].split()
 
+    paths = kwargs.pop('paths', None)
+
     if 'bundles' in kwargs:
         if isinstance(kwargs['bundles'], six.string_types):
             kwargs['bundles'] = kwargs['bundles'].split()
 
     bundles = kwargs.pop('bundles', None)
+
     assets_env = Environment(asset_dir, asset_url, **kwargs)
+
+    if paths is not None:
+        for map_path, map_url in json.loads(paths).items():
+            assets_env.append_path(map_path, map_url)
 
     def yaml_stream(fname):
         if path.exists(fname):

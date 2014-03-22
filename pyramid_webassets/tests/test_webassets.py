@@ -104,6 +104,51 @@ class TestWebAssets(unittest.TestCase):
 
         assert env.directory == settings['webassets.base_dir']
         assert env.url == settings['webassets.base_url']
+        self.assertEqual(env.url_mapping, {})
+        self.assertEqual(env.load_path, [])
+
+    def test_get_webassets_env_from_settings_paths(self):
+        from pyramid_webassets import get_webassets_env_from_settings
+
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.paths': '{"/path/to/scripts": "/js", "/path/to/styles": "/css"}',
+        }
+
+        env = get_webassets_env_from_settings(settings)
+
+        assert env.directory == settings['webassets.base_dir']
+        assert env.url == settings['webassets.base_url']
+        self.assertEqual(env.url_mapping, {
+            '/path/to/scripts': '/js',
+            '/path/to/styles':  '/css',
+            })
+        self.assertEqual(sorted(env.load_path), sorted([
+            '/path/to/styles',
+            '/path/to/scripts',
+            ]))
+
+    def test_get_webassets_env_from_settings_paths_null_url(self):
+        from pyramid_webassets import get_webassets_env_from_settings
+
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.paths': '{"/path/to/scripts": null, "/path/to/styles": "/css"}',
+        }
+
+        env = get_webassets_env_from_settings(settings)
+
+        assert env.directory == settings['webassets.base_dir']
+        assert env.url == settings['webassets.base_url']
+        self.assertEqual(env.url_mapping, {
+            '/path/to/styles':  '/css',
+            })
+        self.assertEqual(sorted(env.load_path), sorted([
+            '/path/to/styles',
+            '/path/to/scripts',
+            ]))
 
     def test_get_webassets_env_from_settings_autobuild_disabled(self):
         from pyramid_webassets import get_webassets_env_from_settings
