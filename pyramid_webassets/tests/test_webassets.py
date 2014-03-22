@@ -47,6 +47,23 @@ class TestWebAssets(unittest.TestCase):
         add_setting(config, 'foo', 'bar')
         assert env.config['foo'] == 'bar'
 
+    def test_add_path(self):
+        from pyramid_webassets import add_path
+
+        config = Mock()
+        config.registry = Mock()
+        queryUtility = Mock()
+        env = Mock()
+        env.config = {}
+        register = Mock()
+        env.register = register
+        queryUtility.return_value = env
+
+        config.registry.queryUtility = queryUtility
+
+        add_path(config, 'foo', '/bar')
+        env.append_path.assert_called_with('foo', '/bar')
+
     def test_get_webassets_env(self):
         from pyramid_webassets import get_webassets_env
         from pyramid_webassets import IWebAssetsEnvironment
