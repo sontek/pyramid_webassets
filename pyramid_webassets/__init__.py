@@ -225,6 +225,10 @@ def add_setting(config, key, value):
     env = config.registry.queryUtility(IWebAssetsEnvironment)
     env.config[key] = value
 
+def add_path(config, path, url):
+    env = config.registry.queryUtility(IWebAssetsEnvironment)
+    env.append_path(path, url)
+
 def assets(request, *args, **kwargs):
     env = get_webassets_env_from_request(request)
 
@@ -255,6 +259,7 @@ def includeme(config):
     config.add_directive('add_webasset', add_webasset)
     config.add_directive('get_webassets_env', get_webassets_env)
     config.add_directive('add_webassets_setting', add_setting)
+    config.add_directive('add_webassets_path', add_path)
 
     if assets_env.config['static_view']:
         config.add_static_view(
