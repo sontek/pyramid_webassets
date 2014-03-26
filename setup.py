@@ -37,6 +37,7 @@ setup(name='pyramid_webassets',
       classifiers=[
           "Programming Language :: Python",
           "Framework :: Pylons",
+          "License :: OSI Approved :: MIT License",
           "Topic :: Internet :: WWW/HTTP",
           "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
       ],
