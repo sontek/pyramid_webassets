@@ -124,6 +124,20 @@ class TestWebAssets(unittest.TestCase):
         self.assertEqual(env.url_mapping, {})
         self.assertEqual(env.load_path, [])
 
+    def test_get_webassets_env_from_settings_asset_spec_dir(self):
+        import pyramid_webassets
+        from pyramid_webassets import get_webassets_env_from_settings
+
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': 'pyramid_webassets:static',
+        }
+
+        env = get_webassets_env_from_settings(settings)
+        expected = os.path.join(pyramid_webassets.__path__[0], 'static')
+
+        assert env.directory == expected
+
     def test_get_webassets_env_from_settings_paths(self):
         from pyramid_webassets import get_webassets_env_from_settings
 
