@@ -131,7 +131,7 @@ Building assets from a script
 =======================================
 The `webassets` module includes a command line script, also called `webassets`,
 which can be used to build bundles offline. When integrating with Pyramid, it
-can be helpful to bootstrap the environment using paster like so:
+can be helpful to bootstrap the environment using paster instead, like so:
 
 ``` python
 import pyramid.paster
