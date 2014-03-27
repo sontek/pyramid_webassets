@@ -718,16 +718,15 @@ class TestBaseUrlBehvior(object):
         self.config = testing.setUp(request=self.request, settings={
             'webassets.base_url': base_url,
             'webassets.base_dir': self.temp.tempdir + base_dir,
-            'webassets.static_view': automatic_view})
+            'webassets.static_view': automatic_view,
+            'webassets.url_expire': False,
+        })
         self.config.include('pyramid_webassets')
 
         if manual_view:
             self.config.add_static_view('static', 'mypkg:static')
 
-        self.env = get_webassets_env(self.config)
-        # Disable cache busting
-        self.env.url_expire = False
-        return self.env
+        return get_webassets_env(self.config)
 
     def format_expected(self, expected, webasset):
         """
@@ -752,19 +751,23 @@ class TestBaseUrlBehvior(object):
          ('/static', 'automatic', 't.css', 'http://example.com/static/t.css'),
          ('/static', None, 'mypkg:static/t.css', '/static/%(external)st.css'),
          ('/static', None, 'static:t.css', '/static/t.css'),
+
          # If base_url is an asset spec, but webassets are files
          ('static:some', 'manual', 'static/t.css', 'static/t.css'),
          ('static:some', None, 't.css', 't.css'),
+
          # base_url as asset spec, but webasset is asset spec with route
          ('mypkg:some', 'manual', 'mypkg:static/t.css',
           'http://example.com/static/t.css'),
+
          # base_url as asset spec, but webasset is asset spec without route
          ('static:some', None, 'static:t.css', 't.css'),
          # base_url as asset spec, but webasset is asset spec automatic route
          ('static:some', 'automatic', 'static:t.css', 't.css'),
+
          # Work a bit the resolve output (o.css will activate the output=o.css)
          ('mypkg:static', 'manual', 'mypkg:static/t.css',
-          'http://example.com/static/o.css')]
+          'http://example.com/static/o.css')],
     )
     def test_url(self, base_url, static_view, webasset, expected):
         """
