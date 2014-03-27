@@ -129,7 +129,6 @@ within your Pyramid application easier.
 
 Configuration
 ---------------
-
 These methods can be called on the `Configurator` instance during startup:
 
 ``add_webasset(name, bundle)``: Registers a bundle with webassets
@@ -146,7 +145,6 @@ your configuration and it will return a webassets environment.
 
 Request handling
 ------------------
-
 These properties and helpers are attached to the `Request` object:
 
 ``request.webassets_env``: Access the webassets environment
