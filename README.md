@@ -78,9 +78,14 @@ webassets.less_run_in_debug     = true
 webassets.less_extra_args       = json:["--line-numbers=mediaquery", "-O2"]
 ```
 
+Use with templates
+========================
+Included are helpers that you can use with your templates. Additional helpers
+are documented below in the section labeled "Extras".
 
 Mako
-====================
+-----
+
 You can use the global webassets tag:
 ``` python
 % for url in webassets(request, 'css/bootstrap.css', 'css/bootstrap-responsive.css', output='css/generated.css', filters='cssmin'):
@@ -90,17 +95,8 @@ You can use the global webassets tag:
 
 or you can grab the environment from the request.
 
-From The Request
-====================
-If you are not using Jinja2, you can still access the environment from the request.
-
-```python
-jst_urls = request.webassets_env['jst'].urls()
-```
-
-
 Jinja2
-====================
+-------
 If you are using Jinja2, you can just do the following configuration (this assumes use of pyramid_jinja2):
 
 ``` python
@@ -117,10 +113,18 @@ and then:
 {% endassets %}
 ```
 
+Generic
+--------
+It's always possible to access the environment from the request.
+
+```python
+jst_urls = request.webassets_env['jst'].urls()
+```
+
 Extras
 ====================
 
-There are a few utility methods you can use to make working with webassets
+There are a few more utility methods you can use to make working with webassets
 within your Pyramid application easier.
 
 Configuration
