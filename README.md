@@ -119,13 +119,25 @@ and then:
 
 Extras
 ====================
-There are a few utility methods you can use:
+There are a few utility methods on the `Configurator` you can use:
+
+``add_webasset(name, bundle)``: Registers a bundle with webassets
+
+``add_webassets_setting(key, value)``: Update the environment configuration
+
+``add_webassets_path(path, url)``: Append a URL mapping to the environment
 
 ``get_webassets_env_from_settings(settings, prefix='static_assets')``: Pass it a dictionary of your settings and an
 optional keyword argument of the prefix in your configuration and it will return you a webassets environment.
 
-``get_webassets_env(request or config)``: This will pull the environment out of the registry, you can use either
+``get_webassets_env()``: This will pull the environment out of the registry, you can use either
 a configurator object or a request.
+
+There are also a few utilities on the `Request` object:
+
+``request.webassets_env``: Access the webassets environment
+
+``request.webassets(*bundle_names, **kwargs)``: Build the named bundles. Keyword arguments will be passed to webassets.
 
 Building assets from a script
 =======================================
