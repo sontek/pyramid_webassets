@@ -119,7 +119,14 @@ and then:
 
 Extras
 ====================
-There are a few utility methods on the `Configurator` you can use:
+
+There are a few utility methods you can use to make working with webassets
+within your Pyramid application easier.
+
+Configuration
+---------------
+
+These methods can be called on the `Configurator` instance during startup:
 
 ``add_webasset(name, bundle)``: Registers a bundle with webassets
 
@@ -133,7 +140,10 @@ your configuration and it will return a webassets environment.
 
 ``get_webassets_env()``: This will pull the environment out of the registry.
 
-There are also a few utilities on the `Request` object:
+Request handling
+------------------
+
+These properties and helpers are attached to the `Request` object:
 
 ``request.webassets_env``: Access the webassets environment
 
