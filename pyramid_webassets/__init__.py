@@ -116,21 +116,31 @@ class PyramidResolver(Resolver):
     def resolve_output_to_url(self, item):
         request = get_current_request()
 
+        # Attempt to resolve the output item. First, resolve the item if its
+        # an asset spec. If it's a relative path, construct a url from the
+        # environment base url, which may be an asset spec that the base class
+        # cannot handle. Try to resolve this url and the item against the
+        # `static_url` method.
+        url = None
         package, filepath = self._split_asset_spec(item)
-        if package is not None:
-            item = path.join(package, filepath)
-        else:
+        if package is None:
             if not path.isabs(filepath):
                 item = path.join(self.env.directory, filepath)
+                url = path.join(self.env.url, filepath)
+        else:
+            item = path.join(package, filepath)
 
-        if request is not None:
+        if url is None:
+            url = super(PyramidResolver, self).resolve_output_to_url(item)
+
+        for attempt in (url, item):
             try:
-                url = request.static_url(item)
-                return url
+                return request.static_url(attempt)
             except ValueError:
                 pass
 
-        return super(PyramidResolver, self).resolve_output_to_url(item)
+        return url
+
 
 class Environment(Environment):
     resolver_class = PyramidResolver
