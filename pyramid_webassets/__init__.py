@@ -80,11 +80,18 @@ class PyramidResolver(Resolver):
 
         resolved = False
         if request is not None:
-            try:
-                url = request.static_url(url)
-                resolved = True
-            except ValueError:
-                pass
+            # Attempt to resolve the filepath as passed (but after versioning).
+            # If this fails, it may be because the static route was registered
+            # with an asset spec. In this case, the original item may also be
+            # an asset spec contained therein, so try to resolve that.
+            for attempt in (url, item):
+                try:
+                    url = request.static_url(attempt)
+                except ValueError:
+                    continue
+                else:
+                    resolved = True
+                    break
 
         if not resolved:
             url = super(PyramidResolver, self).resolve_source_to_url(
