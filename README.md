@@ -126,3 +126,18 @@ optional keyword argument of the prefix in your configuration and it will return
 
 ``get_webassets_env(request or config)``: This will pull the environment out of the registry, you can use either
 a configurator object or a request.
+
+Building assets from a script
+=======================================
+The `webassets` module includes a command line script, also called `webassets`,
+which can be used to build bundles offline. When integrating with Pyramid, it
+can be helpful to bootstrap the environment using paster like so:
+
+``` python
+import pyramid.paster
+import webassets.script
+
+app_env = pyramid.paster.bootstrap('config.ini')
+assets_env = app_env['request'].webasset_env
+webassets.script.main(['build'], assets_env)
+```
