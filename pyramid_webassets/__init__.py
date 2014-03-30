@@ -193,6 +193,12 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
     asset_dir = kwargs.pop('base_dir')
     asset_url = kwargs.pop('base_url')
 
+    if ':' in asset_dir:
+        try:
+            asset_dir = AssetResolver(None).resolve(asset_dir).abspath()
+        except ImportError:
+            pass
+
     if 'debug' in kwargs:
         kwargs['debug'] = maybebool(kwargs['debug'])
 
