@@ -3,20 +3,21 @@ from os import path, makedirs
 import json
 import six
 
-from pyramid.path           import AssetResolver
-from pyramid.settings       import asbool, truthy
-from pyramid.threadlocal    import get_current_request
-from zope.interface         import Interface
-from webassets              import Bundle
-from webassets.bundle       import has_placeholder
-from webassets.env          import Environment
-from webassets.env          import Resolver
-from webassets.exceptions   import BundleError
-from webassets.loaders      import YAMLLoader
+from pyramid.path import AssetResolver
+from pyramid.settings import asbool, truthy
+from pyramid.threadlocal import get_current_request
+from webassets import Bundle
+from webassets.bundle import has_placeholder
+from webassets.env import Environment, Resolver
+from webassets.exceptions import BundleError
+from webassets.loaders import YAMLLoader
+from zope.interface import Interface
+
 
 falsy = frozenset(('f', 'false', 'n', 'no', 'off', '0'))
 booly = frozenset(list(truthy) + list(falsy))
 auto_booly = frozenset(('true', 'false'))
+
 
 def maybebool(value):
     '''
@@ -29,6 +30,7 @@ def maybebool(value):
     if isinstance(value, six.string_types) and value.lower() in booly:
         return asbool(value)
     return value
+
 
 class PyramidResolver(Resolver):
     def __init__(self, env):
@@ -65,7 +67,7 @@ class PyramidResolver(Resolver):
 
         # Only query the version if we need to for performance
         version = None
-        if has_placeholder(filepath) or env.url_expire != False:
+        if has_placeholder(filepath) or env.url_expire is not False:
             # If auto-build is enabled, we must not use a cached version
             # value, or we might serve old versions.
             bundle = Bundle(item, output=filepath)
@@ -277,13 +279,16 @@ def get_webassets_env_from_request(request):
     """ Get the webassets environment in the registry from the request. """
     return request.registry.queryUtility(IWebAssetsEnvironment)
 
+
 def add_setting(config, key, value):
     env = config.registry.queryUtility(IWebAssetsEnvironment)
     env.config[key] = value
 
+
 def add_path(config, path, url):
     env = config.registry.queryUtility(IWebAssetsEnvironment)
     env.append_path(path, url)
+
 
 def assets(request, *args, **kwargs):
     env = get_webassets_env_from_request(request)
@@ -300,6 +305,7 @@ def assets(request, *args, **kwargs):
     urls = bundle.urls(env=env)
 
     return urls
+
 
 def add_assets_global(event):
     event['webassets'] = assets
@@ -325,5 +331,5 @@ def includeme(config):
         )
 
     config.set_request_property(get_webassets_env_from_request,
-        'webassets_env', reify=True)
+                                'webassets_env', reify=True)
     config.set_request_property(assets, 'webassets', reify=True)
