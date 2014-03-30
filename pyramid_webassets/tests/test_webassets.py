@@ -138,6 +138,20 @@ class TestWebAssets(unittest.TestCase):
 
         assert env.directory == expected
 
+    def test_get_webassets_env_from_settings_dir_with_colon(self):
+        import pyramid_webassets
+        from pyramid_webassets import get_webassets_env_from_settings
+
+        settings = {
+            'webassets.base_url': '/static',
+            'webassets.base_dir': 'here:static',
+        }
+
+        env = get_webassets_env_from_settings(settings)
+        expected = os.path.abspath('here:static')
+
+        assert env.directory == expected
+
     def test_get_webassets_env_from_settings_paths(self):
         from pyramid_webassets import get_webassets_env_from_settings
 
