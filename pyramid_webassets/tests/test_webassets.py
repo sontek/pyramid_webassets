@@ -493,18 +493,6 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         TempDirHelper.teardown(self)
         testing.tearDown()
 
-        import sys
-        # remove tempdir path elements
-        for pth in sys.path:
-            if pth.startswith(self.tempdir):
-                sys.path.remove(pth)
-
-        # remove tempdir modules
-        for name, module in sys.modules.items():
-            if module is not None:
-                if getattr(module, '__file__', '').startswith(self.tempdir):
-                    del sys.modules[name]
-
     def test_asset_spec_passthru_uses_static_url(self):
         from webassets              import Bundle
         from pyramid.path           import AssetResolver
