@@ -713,7 +713,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         self.assertEqual(env._named_bundles.keys(), ['mycss'])
 
 
-class TestBaseUrlBehvior(object):
+class TestBaseUrlBehavior(object):
     """
     Tests related to the base_url with asset specs and static_view
     """
