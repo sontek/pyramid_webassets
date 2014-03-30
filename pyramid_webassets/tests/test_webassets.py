@@ -24,7 +24,7 @@ class TempDirHelper(WebassetsTempDirHelper):
                 sys.path.remove(pth)
 
         # remove tempdir modules
-        for name,module in sys.modules.items():
+        for name, module in sys.modules.items():
             if module is not None:
                 if getattr(module, '__file__', '').startswith(self.tempdir):
                     del sys.modules[name]
@@ -102,7 +102,7 @@ class TestWebAssets(unittest.TestCase):
         env = get_webassets_env(config)
         queryUtility.assert_called_with(IWebAssetsEnvironment)
 
-        assert env != None
+        assert env is not None
 
     def test_get_webassets_env_from_settings_no_config(self):
         from pyramid_webassets import get_webassets_env_from_settings
@@ -233,7 +233,7 @@ class TestWebAssets(unittest.TestCase):
 
         assert env.directory == settings['webassets.base_dir']
         assert env.url == settings['webassets.base_url']
-        assert env.auto_build == False
+        assert env.auto_build is False
 
     def test_get_webassets_env_from_settings_complete(self):
         from pyramid_webassets import get_webassets_env_from_settings
@@ -253,12 +253,12 @@ class TestWebAssets(unittest.TestCase):
 
         assert env.directory == settings['webassets.base_dir']
         assert env.url == settings['webassets.base_url']
-        assert env.debug == True
+        assert env.debug is True
         assert isinstance(env.updater, webassets.updater.AlwaysUpdater)
         assert env.config['JST_COMPILER'] == settings['webassets.jst_compiler']
         assert env.config['JST_NAMESPACE'] == settings['webassets.jst_namespace']
-        assert env.cache == None
-        assert env.auto_build == True
+        assert env.cache is None
+        assert env.auto_build is True
 
     def test_get_webassets_env_from_settings_with_cache(self):
         from pyramid_webassets import get_webassets_env_from_settings
@@ -271,7 +271,7 @@ class TestWebAssets(unittest.TestCase):
 
         env = get_webassets_env_from_settings(settings)
 
-        assert env.cache != None
+        assert env.cache is not None
 
     def test_get_webassets_env_from_settings_with_cache_directory(self):
         from pyramid_webassets import get_webassets_env_from_settings
@@ -290,7 +290,7 @@ class TestWebAssets(unittest.TestCase):
 
         env = get_webassets_env_from_settings(settings)
 
-        assert env.cache != None
+        assert env.cache is not None
         assert env.cache == tmpdir
         assert os.path.isdir(tmpdir)
 
@@ -306,7 +306,7 @@ class TestWebAssets(unittest.TestCase):
 
         env = get_webassets_env_from_settings(settings, prefix='foo')
 
-        assert env != None
+        assert env is not None
         assert env.directory == settings['foo.base_dir']
         assert env.url == settings['foo.base_url']
 
@@ -372,7 +372,7 @@ class TestWebAssets(unittest.TestCase):
         env = get_webassets_env_from_request(request)
         queryUtility.assert_called_with(IWebAssetsEnvironment)
 
-        assert env != None
+        assert env is not None
 
     def test_webassets_static_view_setting(self):
         from pyramid_webassets import get_webassets_env_from_settings
@@ -385,7 +385,7 @@ class TestWebAssets(unittest.TestCase):
 
         env = get_webassets_env_from_settings(settings)
 
-        assert env != None
+        assert env is not None
         assert env.config['static_view'] == settings['webassets.static_view']
 
     def test_webassets_static_view_cache_control_setting(self):
@@ -400,7 +400,7 @@ class TestWebAssets(unittest.TestCase):
 
         env = get_webassets_env_from_settings(settings)
 
-        assert env != None
+        assert env is not None
         assert env.config['static_view'] == settings['webassets.static_view']
         assert env.config['cache_max_age'] == settings['webassets.cache_max_age']
 
@@ -416,7 +416,6 @@ class TestWebAssets(unittest.TestCase):
         env = get_webassets_env_from_settings(settings)
 
         assert env.load_path == ['/foo', 'bar/', 'baz']
-
 
     def test_webassets_source_url_versions(self):
         import md5
@@ -451,7 +450,7 @@ class TestWebAssets(unittest.TestCase):
             'webassets.less_run_in_debug': 'true',
         }
         env = get_webassets_env_from_settings(settings)
-        assert env.config['less_run_in_debug'] == True
+        assert env.config['less_run_in_debug'] is True
 
     def test_auto_json(self):
         from pyramid_webassets import get_webassets_env_from_settings
@@ -477,9 +476,10 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
 
         self.request = testing.DummyRequest()
         self.config = testing.setUp(request=self.request, settings={
-                'webassets.base_url': '/static',
-                'webassets.base_dir': self.tempdir+'/static',
-                'webassets.static_view': True,})
+            'webassets.base_url': '/static',
+            'webassets.base_dir': self.tempdir+'/static',
+            'webassets.static_view': True,
+        })
         self.config.include('pyramid_webassets')
 
         self.env = get_webassets_env(self.config)
@@ -500,7 +500,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
                 sys.path.remove(pth)
 
         # remove tempdir modules
-        for name,module in sys.modules.items():
+        for name, module in sys.modules.items():
             if module is not None:
                 if getattr(module, '__file__', '').startswith(self.tempdir):
                     del sys.modules[name]
@@ -656,9 +656,9 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
             raise unittest.SkipTest('PyYAML not installed')
         from pyramid_webassets import get_webassets_env_from_settings
         settings = {
-            'webassets.base_url' : '/static',
-            'webassets.base_dir' : os.getcwd(),
-            'webassets.bundles'  : self.tempdir + '/foo/bar.yaml',
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.bundles': self.tempdir + '/foo/bar.yaml',
         }
         self.create_files({'foo/bar.yaml': 'mycss: {contents: style/mycss.css}'})
         env = get_webassets_env_from_settings(settings)
@@ -673,10 +673,10 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
             raise unittest.SkipTest('PyYAML not installed')
         from pyramid_webassets import get_webassets_env_from_settings
         settings = {
-            'webassets.base_url' : '/static',
-            'webassets.base_dir' : os.getcwd(),
-            'webassets.bundles'  : 'dotted.package.name:foo/bar.yaml ' \
-                                   'dotted.package.name:foo/baz.yaml',
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.bundles': 'dotted.package.name:foo/bar.yaml '
+                                 'dotted.package.name:foo/baz.yaml',
         }
         self.create_files({
             'dotted/__init__.py': '',
@@ -697,9 +697,9 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
             raise unittest.SkipTest('PyYAML not installed')
         from pyramid_webassets import get_webassets_env_from_settings
         settings = {
-            'webassets.base_url' : '/static',
-            'webassets.base_dir' : os.getcwd(),
-            'webassets.bundles'  : 'dotted.package.name:foo/bar.yaml',
+            'webassets.base_url': '/static',
+            'webassets.base_dir': os.getcwd(),
+            'webassets.bundles': 'dotted.package.name:foo/bar.yaml',
         }
         self.create_files({
             'dotted/__init__.py': '',
