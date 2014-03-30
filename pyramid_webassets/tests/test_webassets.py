@@ -494,15 +494,15 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         testing.tearDown()
 
     def test_asset_spec_passthru_uses_static_url(self):
-        from webassets              import Bundle
-        from pyramid.path           import AssetResolver
+        from webassets import Bundle
+        from pyramid.path import AssetResolver
 
         self.create_files({
-                'dotted/__init__.py': '',
-                'dotted/package/__init__.py': '',
-                'dotted/package/name/__init__.py': '',
-                'dotted/package/name/static/zing.css':
-                '* { text-decoration: underline }'})
+            'dotted/__init__.py': '',
+            'dotted/package/__init__.py': '',
+            'dotted/package/name/__init__.py': '',
+            'dotted/package/name/static/zing.css':
+            '* { text-decoration: underline }'})
         asset_spec = 'dotted.package.name:static/zing.css'
         bundle = Bundle(asset_spec)
         self.request.static_url = Mock(return_value='http://example.com/foo/')
@@ -516,11 +516,11 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         from webassets import Bundle
 
         self.create_files({
-                'dotted/__init__.py': '',
-                'dotted/package/__init__.py': '',
-                'dotted/package/name/__init__.py': '',
-                'dotted/package/name/static/zing.css':
-                '* { text-decoration: underline }'})
+            'dotted/__init__.py': '',
+            'dotted/package/__init__.py': '',
+            'dotted/package/name/__init__.py': '',
+            'dotted/package/name/static/zing.css':
+            '* { text-decoration: underline }'})
         asset_spec = 'dotted.package.name:static/zing.css'
         bundle = Bundle(asset_spec, output='gen/zung.css')
 
@@ -552,9 +552,9 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         from webassets.exceptions import BundleError
 
         self.create_files({
-                'dotted/__init__.py': '',
-                'dotted/package/__init__.py': '',
-                'dotted/package/name/__init__.py': ''})
+            'dotted/__init__.py': '',
+            'dotted/package/__init__.py': '',
+            'dotted/package/name/__init__.py': ''})
         asset_spec = 'dotted.package.name:static/zing.css'
         bundle = Bundle(asset_spec)
 
@@ -569,11 +569,11 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         from webassets.exceptions import BundleError
 
         self.create_files({
-                'dotted/__init__.py': '',
-                'dotted/package/__init__.py': '',
-                'dotted/package/name/__init__.py': '',
-                'dotted/package/name/static/zing.css':
-                '* { text-decoration: underline }'})
+            'dotted/__init__.py': '',
+            'dotted/package/__init__.py': '',
+            'dotted/package/name/__init__.py': '',
+            'dotted/package/name/static/zing.css':
+            '* { text-decoration: underline }'})
         asset_spec = 'dotted.package.rabbits:static/zing.css'
         bundle = Bundle(asset_spec)
 
@@ -586,11 +586,11 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         from webassets import Bundle
 
         self.create_files({
-                'dotted/__init__.py': '',
-                'dotted/package/__init__.py': '',
-                'dotted/package/name/__init__.py': '',
-                'dotted/package/name/static/zing.css':
-                '* { text-decoration: underline }'})
+            'dotted/__init__.py': '',
+            'dotted/package/__init__.py': '',
+            'dotted/package/name/__init__.py': '',
+            'dotted/package/name/static/zing.css':
+            '* { text-decoration: underline }'})
         asset_spec = 'dotted.package.name:static/zing.css'
         bundle = Bundle(asset_spec)
 
