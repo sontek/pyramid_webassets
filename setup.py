@@ -31,7 +31,7 @@ class PyTest(Command):
         raise SystemExit(errno)
 
 setup(name='pyramid_webassets',
-      version='0.7.2',
+      version='0.8',
       description='pyramid_webassets',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
