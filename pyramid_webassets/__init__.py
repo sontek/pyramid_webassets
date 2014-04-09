@@ -59,52 +59,21 @@ class PyramidResolver(Resolver):
         request = get_current_request()
         env = self.env
 
-        # Copied from webassets 0.8. Reproduced here for backwards
-        # compatibility with the previous webassets release.
-        # This ensures files which do not require building are still served
-        # with proper versioning of URLs.
-        # This can likely be removed once miracle2k/webassets#117 is fixed.
-
-        # Only query the version if we need to for performance
-        version = None
-        if has_placeholder(filepath) or env.url_expire is not False:
-            # If auto-build is enabled, we must not use a cached version
-            # value, or we might serve old versions.
-            bundle = Bundle(item, output=filepath)
-            version = bundle.get_version(env, refresh=env.auto_build)
-
-        url = filepath
-        if has_placeholder(url):
-            url = url % {'version': version}
-
-        # This part is different from webassets. Try to resolve with an asset
-        # spec first, then try the base class source URL resolver.
-
-        resolved = False
+        # Attempt to resolve the filepath as passed (but after versioning).
+        # If this fails, it may be because the static route was registered
+        # with an asset spec. In this case, the original item may also be
+        # an asset spec contained therein, so try to resolve that.
         if request is not None:
-            # Attempt to resolve the filepath as passed (but after versioning).
-            # If this fails, it may be because the static route was registered
-            # with an asset spec. In this case, the original item may also be
-            # an asset spec contained therein, so try to resolve that.
-            for attempt in (url, item):
+            for attempt in (filepath, item):
                 try:
-                    url = request.static_url(attempt)
+                    return request.static_url(attempt)
                 except ValueError:
                     continue
-                else:
-                    resolved = True
-                    break
 
-        if not resolved:
-            url = super(PyramidResolver, self).resolve_source_to_url(
-                url,
-                item
-            )
-
-        if env.url_expire or (
-                env.url_expire is None and not has_placeholder(filepath)):
-            url = "%s?%s" % (url, version)
-        return url
+        return super(PyramidResolver, self).resolve_source_to_url(
+            filepath,
+            item
+        )
 
     def resolve_output_to_path(self, target, bundle):
         package, filepath = self._split_asset_spec(target)

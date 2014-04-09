@@ -417,31 +417,6 @@ class TestWebAssets(unittest.TestCase):
 
         assert env.load_path == ['/foo', 'bar/', 'baz']
 
-    def test_webassets_source_url_versions(self):
-        import md5
-        from pyramid_webassets import get_webassets_env_from_settings
-
-        settings = {
-            'webassets.base_url': '/static',
-            'webassets.base_dir': os.getcwd(),
-            'webassets.static_view': True,
-            'webassets.cache_max_age': 3600,
-        }
-
-        env = get_webassets_env_from_settings(settings)
-        env.append_path(os.getcwd(), 'http://static.example.com')
-
-        version = md5.md5(open(__file__).read()).hexdigest()[:8]
-
-        path = 'pyramid_webassets/tests/test_webassets.py'
-        spec = 'pyramid_webassets:tests/test_webassets.py'
-        expected = 'http://static.example.com/%s?%s' % (path, version)
-
-        assert (
-            env.resolver.resolve_source_to_url(os.path.abspath(path), spec) ==
-            expected
-        )
-
     def test_auto_bool(self):
         from pyramid_webassets import get_webassets_env_from_settings
         settings = {
