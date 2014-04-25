@@ -13,7 +13,7 @@ with open(os.path.join(here, 'CHANGES.txt')) as fp:
     CHANGES = fp.read()
 
 #requires = open('requirements.txt').readlines()
-requires = ['pyramid>=1.3', 'webassets>=0.7.1', 'zope.interface', 'six>=1.4.1']
+requires = ['pyramid>=1.3', 'webassets>=0.8', 'zope.interface', 'six>=1.4.1']
 
 extras_require = {
   'bundles-yaml': 'PyYAML>=3.10',
