@@ -67,8 +67,8 @@ class PyramidResolver(Resolver):
             for attempt in (filepath, item):
                 try:
                     return request.static_url(attempt)
-                except ValueError:
-                    continue
+                except:
+                    pass
 
         return super(PyramidResolver, self).resolve_source_to_url(
             filepath,
@@ -107,7 +107,7 @@ class PyramidResolver(Resolver):
         for attempt in (url, item):
             try:
                 return request.static_url(attempt)
-            except ValueError:
+            except:
                 pass
 
         return url
