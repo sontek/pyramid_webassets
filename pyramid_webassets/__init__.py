@@ -236,7 +236,7 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
         for bpath in bundles:
             with closing(yaml_stream(bpath)) as s:
                 loader = YAMLLoader(s)
-                loaded.update(loader.load_bundles(assets_env))
+                loaded.update(loader.load_bundles())
         assets_env.register(loaded)
     elif isinstance(bundles, dict):
         assets_env.register(bundles)
