@@ -51,6 +51,6 @@ setup(name='pyramid_webassets',
       test_suite='pyramid_webassets',
       install_requires=requires,
       extras_require=extras_require,
-      tests_require=['pytest', 'mock', 'unittest2'],
+      tests_require=['pytest', 'mock'],
       cmdclass={'test': PyTest},
       )
