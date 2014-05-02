@@ -16,15 +16,19 @@ with open(os.path.join(here, 'CHANGES.txt')) as fp:
 requires = ['pyramid>=1.3', 'webassets>=0.8', 'zope.interface', 'six>=1.4.1']
 
 extras_require = {
-  'bundles-yaml': 'PyYAML>=3.10',
+    'bundles-yaml': 'PyYAML>=3.10',
 }
+
 
 class PyTest(Command):
     user_options = []
+
     def initialize_options(self):
         pass
+
     def finalize_options(self):
         pass
+
     def run(self):
         import subprocess
         errno = subprocess.call('py.test')
