@@ -1,0 +1,85 @@
+Unreleased
+==========
+
+Features
+--------
+
+- Support versions of webassets >= v0.8.
+
+- Support glob specifications for input files.
+
+- Introduced support for specifying the base directory and input files, and
+  output directories using asset specs. Patches by Randall Leeds and John
+  Anderson, documentation by Javier Gonel. See
+  https://github.com/pyramid_webassets/issues/13
+  https://github.com/pyramid_webassets/issues/14
+  https://github.com/pyramid_webassets/issues/31 and
+  https://github.com/pyramid_webassets/issues/41 .
+
+- A new configuration directive, ``add_webassets_setting``, that updates the
+  provided key and value in the webassets environment configuration can be
+  called from ``Configurator`` instances.
+
+- A new configuration directive, ``add_webassets_path``, that adds an
+  additional mapping from a path to a URL prefix can be called from
+  ``Configurator`` instances. Patch by Jason Brumwell.
+
+- Support for ``auto_build``, ``jst_namespace``, and ``url_expire``
+  webassets settings. Patches by Svante Paldan, Olaf Conradi, and Randall
+  Leeds. See https://github.com/pyramid_webassets/issues/15
+  https://github.com/pyramid_webassets/issues/17 and
+  https://github.com/pyramid_webassets/issues/20 .
+
+- A new ``paths`` setting allows a JSON dictionary of mappings from paths to
+  URLs to be specified in order to support multiple load paths and URL
+  prefixes. Patch by metagriffin.
+
+- Support for multiple values in the ``load_path`` setting. Patch by Greg
+  Kempe. See https://github.com/pyramid_webassets/issues/33 .
+
+- A new ``cache_max_age`` setting controls the expiration and caching
+  behavior of the static view. The value of this setting is passed through to
+  the ``add_static_view`` invocation.
+
+- A ``bundles`` setting can now be specified which lists YAML files to parse
+  for bundle definitions. Earlier entries override bundles defined in later
+  entries. Patch by metagriffin and multiple value support by Randall Leeds.
+  See https://github.com/pyramid_webassets/issues/35 .
+
+- Configuration values prefixed with the string 'json:' are parsed as JSON
+  before being passed to webassets. Patch by metagriffin.
+
+Bug Fixes
+---------
+
+- Assets can now be built without an active request.
+
+- The ``cache`` and ``manifest`` options now support valid non-boolean values
+  as described by the webassets documentation. Patch by Mike Wirth. See
+  https://github.com/pyramid_webassets/issues/11 .
+
+- If the ``cache`` argument specifies a directory ensure that it exists.
+  Patch by metagriffin. See https://github.com/pyramid_webassets/issues/29 .
+
+Documentation
+-------------
+
+- Cleaned up documentation markup. Patch by Michael Merickel.
+  https://github.com/pyramid_webassets/issues/18
+
+- Fix typo in documentation of ``url_expire`` setting. The setting had been
+  spelled (incorrectly) as ``url_expires``. Patch by Greg Kempe.
+  See https://github.com/pyramid_webassets/issues/34 .
+
+- Add an example of building assets from the command line.
+
+- Include the MIT License.
+
+Backwards Incompatibilities
+---------------------------
+
+- Support for webassets releases older than v0.8 has been dropped.
+
+- A static view for the configured directory and url is no longer added
+  automatically. Set the configuration value ``static_views`` to true to have
+  it added when pyramid_webassets is included.
