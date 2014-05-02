@@ -662,18 +662,28 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         settings = {
             'webassets.base_url': '/static',
             'webassets.base_dir': os.getcwd(),
-            'webassets.bundles': 'dotted.package.name:foo/bar.yaml',
+            'webassets.bundles': (
+                'dotted.package.name:foo/bar.yaml\n'
+                'dotted.package.name:foo/baz.yaml'
+            ),
         }
         self.create_files({
             'dotted/__init__.py': '',
             'dotted/package/__init__.py': '',
             'dotted/package/name/__init__.py': '',
-            'dotted/package/name/foo/bar.yaml': 'mycss: {contents: style/mycss.css}',
+            'dotted/package/name/foo/bar.yaml': (
+                'mycss: {contents: style/mycssoverride.css}'
+            ),
+            'dotted/package/name/foo/baz.yaml': (
+                'mycss: {contents: style/mycss.css}\n'
+                'myjs: {contents: js/myjs.js}'
+            ),
         })
         env = get_webassets_env_from_settings(settings)
         self.assertEqual(env.config.get('bundles'), None)
         self.assertIsNotNone(env['mycss'])
-        self.assertEqual(env._named_bundles.keys(), ['mycss'])
+        self.assertEqual(env._named_bundles.keys(), ['mycss', 'myjs'])
+        self.assertIn('style/mycssoverride.css', env['mycss'].contents)
 
 
 class TestBaseUrlBehavior(object):

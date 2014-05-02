@@ -233,7 +233,7 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
 
     if isinstance(bundles, list):
         loaded = {}
-        for bpath in bundles:
+        for bpath in reversed(bundles):
             with closing(yaml_stream(bpath)) as s:
                 loader = YAMLLoader(s)
                 loaded.update(loader.load_bundles())
