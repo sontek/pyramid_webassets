@@ -458,10 +458,14 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
 
         TempDirHelper.setup(self)
 
+        self.create_files({
+            'static/__init__.py': '',
+            'static/assets/zing.css': '* { text-decoration: underline }'})
+
         self.request = testing.DummyRequest()
         self.config = testing.setUp(request=self.request, settings={
             'webassets.base_url': '/static',
-            'webassets.base_dir': self.tempdir+'/static',
+            'webassets.base_dir': 'static:assets',
             'webassets.static_view': True,
         })
         self.config.include('pyramid_webassets')
@@ -481,13 +485,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         from webassets import Bundle
         from pyramid.path import AssetResolver
 
-        self.create_files({
-            'dotted/__init__.py': '',
-            'dotted/package/__init__.py': '',
-            'dotted/package/name/__init__.py': '',
-            'dotted/package/name/static/zing.css':
-            '* { text-decoration: underline }'})
-        asset_spec = 'dotted.package.name:static/zing.css'
+        asset_spec = 'static:assets/zing.css'
         bundle = Bundle(asset_spec)
         self.request.static_url = Mock(return_value='http://example.com/foo/')
 
@@ -499,66 +497,45 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
     def test_asset_spec_source_is_resolved(self):
         from webassets import Bundle
 
-        self.create_files({
-            'dotted/__init__.py': '',
-            'dotted/package/__init__.py': '',
-            'dotted/package/name/__init__.py': '',
-            'dotted/package/name/static/zing.css':
-            '* { text-decoration: underline }'})
-        asset_spec = 'dotted.package.name:static/zing.css'
-        bundle = Bundle(asset_spec, output='gen/zung.css')
+        asset_spec = 'static:assets/zing.css'
+        bundle = Bundle(asset_spec, output='zung.css')
 
         urls = _urls(bundle, self.env)
-        assert urls == ['http://example.com/static/gen/zung.css']
-        urls[0] = urls[0][len(self.request.application_url):]
-        assert file(self.tempdir+urls[0]).read() == '* { text-decoration: underline }'
+        assert urls == ['http://example.com/static/zung.css']
+
+        fname = os.path.join(self.tempdir, 'static', 'assets', 'zung.css')
+        assert file(fname).read() == '* { text-decoration: underline }'
 
     def test_asset_spec_output_is_resolved(self):
         from webassets import Bundle
 
-        self.create_files({
-            'static/__init__.py': '',
-            'dotted/__init__.py': '',
-            'dotted/package/__init__.py': '',
-            'dotted/package/name/__init__.py': '',
-            'dotted/package/name/static/zing.css':
-            '* { text-decoration: underline }'})
-        asset_spec = 'dotted.package.name:static/zing.css'
-        bundle = Bundle(asset_spec, output='static:zung.css')
+        asset_spec = 'static:assets/zing.css'
+        bundle = Bundle(asset_spec, output='static:assets/zung.css')
 
         urls = _urls(bundle, self.env)
         assert urls == ['http://example.com/static/zung.css']
-        urls[0] = urls[0][len(self.request.application_url):]
-        assert file(self.tempdir+urls[0]).read() == '* { text-decoration: underline }'
+
+        fname = os.path.join(self.tempdir, 'static', 'assets', 'zung.css')
+        assert file(fname).read() == '* { text-decoration: underline }'
 
     def test_asset_spec_missing_file(self):
         from webassets import Bundle
         from webassets.exceptions import BundleError
 
-        self.create_files({
-            'dotted/__init__.py': '',
-            'dotted/package/__init__.py': '',
-            'dotted/package/name/__init__.py': ''})
-        asset_spec = 'dotted.package.name:static/zing.css'
+        asset_spec = 'static:assets/bogus.css'
         bundle = Bundle(asset_spec)
 
         with self.assertRaises(BundleError) as cm:
             _urls(bundle, self.env)
 
-        fname = self.tempdir+'/dotted/package/name/static/zing.css'
+        fname = self.tempdir+'/static/assets/bogus.css'
         assert str(cm.exception.message) == ("'%s' does not exist" % (fname,))
 
     def test_asset_spec_missing_package(self):
         from webassets import Bundle
         from webassets.exceptions import BundleError
 
-        self.create_files({
-            'dotted/__init__.py': '',
-            'dotted/package/__init__.py': '',
-            'dotted/package/name/__init__.py': '',
-            'dotted/package/name/static/zing.css':
-            '* { text-decoration: underline }'})
-        asset_spec = 'dotted.package.rabbits:static/zing.css'
+        asset_spec = 'rabbits:static/zing.css'
         bundle = Bundle(asset_spec)
 
         with self.assertRaises(BundleError) as cm:
@@ -575,6 +552,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
             'dotted/package/name/__init__.py': '',
             'dotted/package/name/static/zing.css':
             '* { text-decoration: underline }'})
+
         asset_spec = 'dotted.package.name:static/zing.css'
         bundle = Bundle(asset_spec)
 
@@ -590,12 +568,9 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         from webassets import Bundle
 
         self.create_files({
-            'static/__init__.py': '',
-            'static/zing.css':
-            '* { text-decoration: underline }',
-            'static/zang.css':
+            'static/assets/zang.css':
             '* { text-decoration: underline }'})
-        asset_spec = 'static:z*ng.css'
+        asset_spec = 'static:assets/z*ng.css'
         bundle = Bundle(asset_spec)
 
         urls = _urls(bundle, self.env)
