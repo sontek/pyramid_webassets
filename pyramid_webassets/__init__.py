@@ -324,7 +324,7 @@ def assets(request, *args, **kwargs):
     bundle = Bundle(*result, **kwargs)
     if webassets_version > (0, 9):
         with bundle.bind(env):
-            urls = bundle.build()
+            urls = bundle.urls()
     else:
         urls = bundle.urls(env=env)
 
