@@ -7,6 +7,7 @@ from pyramid.path import AssetResolver
 from pyramid.settings import asbool, truthy
 from pyramid.threadlocal import get_current_request
 from webassets import Bundle
+from webassets import __version__ as webassets_version
 from webassets.env import Environment, Resolver
 from webassets.exceptions import BundleError
 from webassets.loaders import YAMLLoader
@@ -32,8 +33,8 @@ def maybebool(value):
 
 
 class PyramidResolver(Resolver):
-    def __init__(self, env):
-        super(PyramidResolver, self).__init__(env)
+    def __init__(self):
+        super(PyramidResolver, self).__init__()
         self.resolver = AssetResolver(None)
 
     def _split_asset_spec(self, item):
@@ -47,14 +48,22 @@ class PyramidResolver(Resolver):
         else:
             return (None, item)
 
-    def search_for_source(self, item):
+    def search_for_source(self, ctx, item):
         package, filepath = self._split_asset_spec(item)
         if package is None:
-            return super(PyramidResolver, self).search_for_source(filepath)
+            if webassets_version > (0, 9):
+                return super(PyramidResolver, self).search_for_source(
+                    ctx,
+                    filepath
+                )
+            else:
+                return super(PyramidResolver, self).search_for_source(
+                    filepath
+                )
         else:
             return self.consider_single_directory(package, filepath)
 
-    def resolve_source_to_url(self, filepath, item):
+    def resolve_source_to_url(self, ctx, filepath, item):
         request = get_current_request()
 
         # Attempt to resolve the filepath as passed (but after versioning).
@@ -68,21 +77,36 @@ class PyramidResolver(Resolver):
                 except:
                     pass
 
-        return super(PyramidResolver, self).resolve_source_to_url(
-            filepath,
-            item
-        )
+        if webassets_version > (0, 9):
+            return super(PyramidResolver, self).resolve_source_to_url(
+                ctx,
+                filepath,
+                item
+            )
+        else:
+            return super(PyramidResolver, self).resolve_source_to_url(
+                filepath,
+                item
+            )
 
-    def resolve_output_to_path(self, target, bundle):
+    def resolve_output_to_path(self, ctx, target, bundle):
         package, filepath = self._split_asset_spec(target)
         if package is not None:
             target = path.join(package, filepath)
-        return super(PyramidResolver, self).resolve_output_to_path(
-            target,
-            bundle
-        )
 
-    def resolve_output_to_url(self, item):
+        if webassets_version > (0, 9):
+            return super(PyramidResolver, self).resolve_output_to_path(
+                ctx,
+                target,
+                bundle
+            )
+        else:
+            return super(PyramidResolver, self).resolve_output_to_path(
+                target,
+                bundle
+            )
+
+    def resolve_output_to_url(self, ctx, item):
         request = get_current_request()
 
         # Attempt to resolve the output item. First, resolve the item if its
@@ -94,13 +118,19 @@ class PyramidResolver(Resolver):
         package, filepath = self._split_asset_spec(item)
         if package is None:
             if not path.isabs(filepath):
-                item = path.join(self.env.directory, filepath)
-                url = path.join(self.env.url, filepath)
+                item = path.join(ctx.directory, filepath)
+                url = path.join(ctx.url, filepath)
         else:
             item = path.join(package, filepath)
 
         if url is None:
-            url = super(PyramidResolver, self).resolve_output_to_url(item)
+            if webassets_version > (0, 9):
+                url = super(PyramidResolver, self).resolve_output_to_url(
+                    ctx,
+                    item
+                )
+            else:
+                url = super(PyramidResolver, self).resolve_output_to_url(item)
 
         for attempt in (url, item):
             try:
@@ -111,8 +141,31 @@ class PyramidResolver(Resolver):
         return url
 
 
+class LegacyPyramidResolver(PyramidResolver):
+    def __init__(self, env):
+        Resolver.__init__(self, env)
+        self.resolver = AssetResolver(None)
+
+    def search_for_source(self, *args):
+        return PyramidResolver.search_for_source(self, self.env, *args)
+
+    def resolve_source_to_url(self, *args):
+        return PyramidResolver.resolve_source_to_url(self, self.env, *args)
+
+    def resolve_output_to_path(self, *args):
+        return PyramidResolver.resolve_output_to_path(self, self.env, *args)
+
+    def resolve_output_to_url(self, *args):
+        return PyramidResolver.resolve_output_to_url(self, self.env, *args)
+
+
 class Environment(Environment):
-    resolver_class = PyramidResolver
+    @property
+    def resolver_class(self):
+        if webassets_version > (0, 9):
+            return PyramidResolver
+        else:
+            return LegacyPyramidResolver
 
 
 class IWebAssetsEnvironment(Interface):
@@ -269,7 +322,11 @@ def assets(request, *args, **kwargs):
             result.append(f)
 
     bundle = Bundle(*result, **kwargs)
-    urls = bundle.urls(env=env)
+    if webassets_version > (0, 9):
+        with bundle.bind(env):
+            urls = bundle.build()
+    else:
+        urls = bundle.urls(env=env)
 
     return urls
 

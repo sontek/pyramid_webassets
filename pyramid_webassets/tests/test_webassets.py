@@ -1,10 +1,20 @@
 import unittest
 import os
+import hashlib
 
 from mock import Mock
 from pyramid import testing
 import pytest
+from webassets import __version__ as webassets_version
 from webassets.test import TempDirHelper as WebassetsTempDirHelper
+
+
+def _urls(bundle, env):
+    if webassets_version > (0, 9):
+        with bundle.bind(env):
+            return bundle.urls()
+    else:
+        return bundle.urls(env=env)
 
 
 class TempDirHelper(WebassetsTempDirHelper):
@@ -481,7 +491,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         bundle = Bundle(asset_spec)
         self.request.static_url = Mock(return_value='http://example.com/foo/')
 
-        urls = bundle.urls(self.env)
+        urls = _urls(bundle, self.env)
         path = AssetResolver(None).resolve(asset_spec).abspath()
         self.request.static_url.assert_called_with(path)
         assert urls == ['http://example.com/foo/']
@@ -498,7 +508,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         asset_spec = 'dotted.package.name:static/zing.css'
         bundle = Bundle(asset_spec, output='gen/zung.css')
 
-        urls = bundle.urls(self.env)
+        urls = _urls(bundle, self.env)
         assert urls == ['http://example.com/static/gen/zung.css']
         urls[0] = urls[0][len(self.request.application_url):]
         assert file(self.tempdir+urls[0]).read() == '* { text-decoration: underline }'
@@ -516,7 +526,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         asset_spec = 'dotted.package.name:static/zing.css'
         bundle = Bundle(asset_spec, output='static:zung.css')
 
-        urls = bundle.urls(self.env)
+        urls = _urls(bundle, self.env)
         assert urls == ['http://example.com/static/zung.css']
         urls[0] = urls[0][len(self.request.application_url):]
         assert file(self.tempdir+urls[0]).read() == '* { text-decoration: underline }'
@@ -533,7 +543,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         bundle = Bundle(asset_spec)
 
         with self.assertRaises(BundleError) as cm:
-            bundle.urls(self.env)
+            _urls(bundle, self.env)
 
         fname = self.tempdir+'/dotted/package/name/static/zing.css'
         assert str(cm.exception.message) == ("'%s' does not exist" % (fname,))
@@ -552,7 +562,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         bundle = Bundle(asset_spec)
 
         with self.assertRaises(BundleError) as cm:
-            bundle.urls(self.env)
+            _urls(bundle, self.env)
 
         assert cm.exception.args[0].message == 'No module named rabbits'
 
@@ -570,7 +580,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
 
         # webassets will copy the file into a place that it can generate
         # a url for
-        urls = bundle.urls(self.env)
+        urls = _urls(bundle, self.env)
         domain = 'http://example.com/static/webassets-external/'
 
         assert domain in urls[0]
@@ -588,7 +598,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         asset_spec = 'static:z*ng.css'
         bundle = Bundle(asset_spec)
 
-        urls = bundle.urls(self.env)
+        urls = _urls(bundle, self.env)
         assert len(urls) == 2
         assert 'http://example.com/static/zing.css' in urls
         assert 'http://example.com/static/zang.css' in urls
@@ -608,7 +618,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         asset_spec = 'dotted.package.name:static/zing.css'
         bundle = Bundle(asset_spec, output=asset_spec.replace('zing', 'zung'))
 
-        urls = bundle.urls(self.env)
+        urls = _urls(bundle, self.env)
         assert urls == ['http://static.example.com/zung.css']
 
     def test_bundles_yamlloader_file(self):
@@ -741,7 +751,11 @@ class TestBaseUrlBehavior(object):
             name = AssetResolver(None).resolve(webasset).abspath()
         else:
             name = self.temp.tempdir + '/static/' + webasset
-        hashed_filename = hash(name) & ((1 << 64) - 1)
+
+        if webassets_version > (0, 9):
+            hashed_filename = hashlib.md5(name).hexdigest()
+        else:
+            hashed_filename = hash(name) & ((1 << 64) - 1)
         external = 'webassets-external/%s_' % hashed_filename
         return expected % {'external': external}
 
@@ -783,5 +797,5 @@ class TestBaseUrlBehavior(object):
         expected = self.format_expected(expected, webasset)
         params = {} if not 'o.css' in expected else {'output': 'o.css'}
         bundle = Bundle(webasset, **params)
-        res = bundle.urls(self.build_env(base_url, static_view))
+        res = _urls(bundle, self.build_env(base_url, static_view))
         assert [expected] == res
