@@ -547,6 +547,17 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
 
         assert re.search('rabbits', str(cm.exception)) is not None
 
+    def test_asset_spec_static_view(self):
+        from webassets import Bundle
+
+        asset_spec = 'static:assets/zing.css'
+        bundle = Bundle(asset_spec)
+
+        # webassets will copy the file into a place that it can generate
+        # a url for
+        urls = _urls(bundle, self.env)
+        assert self.request.static_url(asset_spec) in urls
+
     def test_asset_spec_no_static_view(self):
         from webassets import Bundle
 
