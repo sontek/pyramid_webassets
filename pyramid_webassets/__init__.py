@@ -38,34 +38,48 @@ class PyramidResolver(Resolver):
         super(PyramidResolver, self).__init__()
         self.resolver = AssetResolver(None)
 
-    def _split_asset_spec(self, item):
+    def _split_spec(self, item):
         if ':' in item:
-            package, filepath = item.split(':', 1)
-            try:
-                package = self.resolver.resolve('%s:' % package).abspath()
-            except ImportError as e:
-                raise BundleError(e)
-            return (package, filepath)
+            package, subpath = item.split(':', 1)
+            return (package, subpath)
         else:
             return (None, item)
 
+    def _resolve_spec(self, spec):
+        package, subpath = self._split_spec(spec)
+
+        try:
+            pkgpath = self.resolver.resolve(package + ':').abspath()
+        except ImportError as e:
+            raise BundleError(e)
+        else:
+            return path.join(pkgpath, subpath)
+
     def search_for_source(self, ctx, item):
-        package, filepath = self._split_asset_spec(item)
+        package, subpath = self._split_spec(item)
         if package is None:
             if USING_WEBASSETS_CONTEXT:
                 return super(PyramidResolver, self).search_for_source(
                     ctx,
-                    filepath
+                    item
                 )
             else:
                 return super(PyramidResolver, self).search_for_source(
-                    filepath
+                    item
                 )
         else:
-            return self.consider_single_directory(package, filepath)
+            pkgpath = self._resolve_spec(package + ':')
+            return self.consider_single_directory(pkgpath, subpath)
 
     def resolve_source_to_url(self, ctx, filepath, item):
         request = get_current_request()
+
+        # Use the filepath to reconstruct the item without globs
+        package, _ = self._split_spec(item)
+        if package is not None:
+            pkgdir = self._resolve_spec(package + ':')
+            if filepath.startswith(pkgdir):
+                item = '{}:{}'.format(package, filepath[len(pkgdir):])
 
         # Attempt to resolve the filepath as passed (but after versioning).
         # If this fails, it may be because the static route was registered
@@ -91,9 +105,10 @@ class PyramidResolver(Resolver):
             )
 
     def resolve_output_to_path(self, ctx, target, bundle):
-        package, filepath = self._split_asset_spec(target)
+        package, filepath = self._split_spec(target)
         if package is not None:
-            target = path.join(package, filepath)
+            pkgpath = self._resolve_spec(package + ':')
+            target = path.join(pkgpath, filepath)
 
         if USING_WEBASSETS_CONTEXT:
             return super(PyramidResolver, self).resolve_output_to_path(
@@ -116,13 +131,14 @@ class PyramidResolver(Resolver):
         # cannot handle. Try to resolve this url and the item against the
         # `static_url` method.
         url = None
-        package, filepath = self._split_asset_spec(item)
+        package, filepath = self._split_spec(item)
         if package is None:
             if not path.isabs(filepath):
                 item = path.join(ctx.directory, filepath)
                 url = path.join(ctx.url, filepath)
         else:
-            item = path.join(package, filepath)
+            pkgpath = self._resolve_spec(package + ':')
+            item = path.join(pkgpath, filepath)
 
         if url is None:
             if USING_WEBASSETS_CONTEXT:
