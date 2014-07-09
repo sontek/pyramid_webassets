@@ -339,7 +339,8 @@ def add_assets_global(event):
 def includeme(config):
     config.add_subscriber(add_assets_global, 'pyramid.events.BeforeRender')
 
-    assets_env = get_webassets_env_from_settings(config.registry.settings)
+    settings = config.registry.settings
+    assets_env = get_webassets_env_from_settings(settings)
 
     config.registry.registerUtility(assets_env, IWebAssetsEnvironment)
 
@@ -350,8 +351,8 @@ def includeme(config):
 
     if assets_env.config['static_view']:
         config.add_static_view(
-            assets_env.url,
-            assets_env.directory,
+            settings['webassets.base_url'],
+            settings['webassets.base_dir'],
             cache_max_age=assets_env.config['cache_max_age']
         )
 
