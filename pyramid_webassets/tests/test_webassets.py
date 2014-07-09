@@ -1,6 +1,5 @@
 import unittest
 import os
-import re
 
 from mock import Mock
 from pyramid import testing

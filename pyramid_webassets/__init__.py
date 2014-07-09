@@ -7,7 +7,6 @@ from pyramid.path import AssetResolver
 from pyramid.settings import asbool, truthy
 from pyramid.threadlocal import get_current_request
 from webassets import Bundle
-from webassets.bundle import has_placeholder
 from webassets.env import Environment, Resolver
 from webassets.exceptions import BundleError
 from webassets.loaders import YAMLLoader
@@ -57,7 +56,6 @@ class PyramidResolver(Resolver):
 
     def resolve_source_to_url(self, filepath, item):
         request = get_current_request()
-        env = self.env
 
         # Attempt to resolve the filepath as passed (but after versioning).
         # If this fails, it may be because the static route was registered
