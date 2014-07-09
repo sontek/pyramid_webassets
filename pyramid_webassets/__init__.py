@@ -13,6 +13,7 @@ from webassets.exceptions import BundleError
 from webassets.loaders import YAMLLoader
 from zope.interface import Interface
 
+USING_WEBASSETS_CONTEXT = webassets_version > (0, 9)
 
 falsy = frozenset(('f', 'false', 'n', 'no', 'off', '0'))
 booly = frozenset(list(truthy) + list(falsy))
@@ -51,7 +52,7 @@ class PyramidResolver(Resolver):
     def search_for_source(self, ctx, item):
         package, filepath = self._split_asset_spec(item)
         if package is None:
-            if webassets_version > (0, 9):
+            if USING_WEBASSETS_CONTEXT:
                 return super(PyramidResolver, self).search_for_source(
                     ctx,
                     filepath
@@ -77,7 +78,7 @@ class PyramidResolver(Resolver):
                 except:
                     pass
 
-        if webassets_version > (0, 9):
+        if USING_WEBASSETS_CONTEXT:
             return super(PyramidResolver, self).resolve_source_to_url(
                 ctx,
                 filepath,
@@ -94,7 +95,7 @@ class PyramidResolver(Resolver):
         if package is not None:
             target = path.join(package, filepath)
 
-        if webassets_version > (0, 9):
+        if USING_WEBASSETS_CONTEXT:
             return super(PyramidResolver, self).resolve_output_to_path(
                 ctx,
                 target,
@@ -124,7 +125,7 @@ class PyramidResolver(Resolver):
             item = path.join(package, filepath)
 
         if url is None:
-            if webassets_version > (0, 9):
+            if USING_WEBASSETS_CONTEXT:
                 url = super(PyramidResolver, self).resolve_output_to_url(
                     ctx,
                     item
@@ -162,7 +163,7 @@ class LegacyPyramidResolver(PyramidResolver):
 class Environment(Environment):
     @property
     def resolver_class(self):
-        if webassets_version > (0, 9):
+        if USING_WEBASSETS_CONTEXT:
             return PyramidResolver
         else:
             return LegacyPyramidResolver
@@ -322,7 +323,7 @@ def assets(request, *args, **kwargs):
             result.append(f)
 
     bundle = Bundle(*result, **kwargs)
-    if webassets_version > (0, 9):
+    if USING_WEBASSETS_CONTEXT:
         with bundle.bind(env):
             urls = bundle.build()
     else:
