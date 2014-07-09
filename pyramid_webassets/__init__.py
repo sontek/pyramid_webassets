@@ -325,7 +325,7 @@ def assets(request, *args, **kwargs):
     bundle = Bundle(*result, **kwargs)
     if USING_WEBASSETS_CONTEXT:
         with bundle.bind(env):
-            urls = bundle.build()
+            urls = bundle.urls()
     else:
         urls = bundle.urls(env=env)
 
