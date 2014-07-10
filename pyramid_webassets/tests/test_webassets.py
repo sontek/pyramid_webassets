@@ -701,6 +701,8 @@ class TestBaseUrlBehavior(object):
         self.temp.create_files({
             'static/__init__.py': '',
             'static/t.css': empty_css,
+            'static/some/__init__.py': '',
+            'static/some/t.css': empty_css,
             'mypkg/__init__.py': '',
             'mypkg/static/t.css': empty_css})
 
@@ -708,16 +710,18 @@ class TestBaseUrlBehavior(object):
         testing.tearDown()
         self.temp.teardown()
 
-    def build_env(self, base_url, static_view):
+    def build_env(self, base_dir, static_view):
         from pyramid_webassets import get_webassets_env
 
         automatic_view, manual_view = self.view_actions[static_view]
-        base_dir = '/static' if not manual_view else '/mypkg'
+
+        if not ':' in base_dir:
+            base_dir = os.path.join(self.temp.tempdir, base_dir)
 
         self.request = testing.DummyRequest()
         self.config = testing.setUp(request=self.request, settings={
-            'webassets.base_url': base_url,
-            'webassets.base_dir': self.temp.tempdir + base_dir,
+            'webassets.base_url': '/static',
+            'webassets.base_dir': base_dir,
             'webassets.static_view': automatic_view,
             'webassets.url_expire': False,
         })
@@ -750,42 +754,40 @@ class TestBaseUrlBehavior(object):
         return expected % {'external': external}
 
     @pytest.mark.parametrize(
-        ('base_url', 'static_view', 'webasset', 'expected'),
-        [('/static', None, 't.css', '/static/t.css'),
-         ('/static', 'automatic', 't.css', 'http://example.com/static/t.css'),
-         ('/static', None, 'mypkg:static/t.css', '/static/%(external)st.css'),
-         ('/static', None, 'static:t.css', '/static/t.css'),
+        ('base_dir', 'static_view', 'webasset', 'expected'),
+        [('static', None, 't.css', '/static/t.css'),
+         ('static', 'automatic', 't.css', 'http://example.com/static/t.css'),
+         ('static', None, 'mypkg:static/t.css', '/static/%(external)st.css'),
+         ('static', None, 'static:t.css', '/static/t.css'),
 
-         # If base_url is an asset spec, but webassets are files
-         ('static:some', 'manual', 'static/t.css', 'static/t.css'),
-         ('static:some', None, 't.css', 't.css'),
+         # If base_dir is an asset spec, but webassets are files
+         ('static:some', 'manual', 't.css', '/static/t.css'),
+         ('static:some', None, 't.css', '/static/t.css'),
 
-         # base_url as asset spec, but webasset is asset spec with route
+         # base_dir as asset spec, but webasset is asset spec with route
          ('mypkg:some', 'manual', 'mypkg:static/t.css',
           'http://example.com/static/t.css'),
 
-         # base_url as asset spec, but webasset is asset spec without route
-         ('static:some', None, 'static:t.css', 't.css'),
-         # base_url as asset spec, but webasset is asset spec automatic route
-         ('static:some', 'automatic', 'static:t.css', 't.css'),
+         # base_dir as asset spec, but webasset is asset spec without route
+         ('static:some', None, 'static:some/t.css', '/static/t.css'),
+         # base_dir as asset spec, but webasset is asset spec automatic route
+         ('static:some', 'automatic', 'static:some/t.css',
+          'http://example.com/static/t.css'),
 
          # Work a bit the resolve output (o.css will activate the output=o.css)
          ('mypkg:static', 'manual', 'mypkg:static/t.css',
           'http://example.com/static/o.css')],
     )
-    def test_url(self, base_url, static_view, webasset, expected):
+    def test_url(self, base_dir, static_view, webasset, expected):
         """
-        Test final urls
+        Test final urls.
 
-        Special notes on the parametrized variables:
-        - expected file, if it ends in o.css, it setups output in the bundle
-        - static_view set to manual changes also the base_dir to /mypkg instead
-          of /static
+        If the expected output ends in o.css, it setups output in the bundle.
         """
         from webassets import Bundle
 
         expected = self.format_expected(expected, webasset)
         params = {} if not 'o.css' in expected else {'output': 'o.css'}
         bundle = Bundle(webasset, **params)
-        res = _urls(bundle, self.build_env(base_url, static_view))
+        res = _urls(bundle, self.build_env(base_dir, static_view))
         assert [expected] == res
