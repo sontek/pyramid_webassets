@@ -371,6 +371,11 @@ def includeme(config):
             settings['webassets.base_dir'],
             cache_max_age=assets_env.config['cache_max_age']
         )
+        config.add_static_view(
+            path.join(assets_env.url, 'webassets-external'),
+            path.join(assets_env.directory, 'webassets-external'),
+            cache_max_age=assets_env.config['cache_max_age']
+        )
 
     config.set_request_property(get_webassets_env_from_request,
                                 'webassets_env', reify=True)
