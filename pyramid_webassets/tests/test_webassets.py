@@ -615,7 +615,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         env = get_webassets_env_from_settings(settings)
         self.assertEqual(env.config.get('bundles'), None)
         self.assertIsNotNone(env['mycss'])
-        self.assertEqual(env._named_bundles.keys(), ['mycss'])
+        self.assertEqual(list(env._named_bundles.keys()), ['mycss'])
 
     def test_bundles_yamlloader_list(self):
         try:
@@ -670,7 +670,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         env = get_webassets_env_from_settings(settings)
         self.assertEqual(env.config.get('bundles'), None)
         self.assertIsNotNone(env['mycss'])
-        self.assertEqual(env._named_bundles.keys(), ['mycss', 'myjs'])
+        self.assertEqual(sorted(env._named_bundles.keys()), ['mycss', 'myjs'])
         self.assertIn('style/mycssoverride.css', env['mycss'].contents)
 
 
