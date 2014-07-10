@@ -545,7 +545,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         with self.assertRaises(BundleError) as cm:
             _urls(bundle, self.env)
 
-        assert re.match("No module named '?rabbits'?", str(cm.exception))
+        assert re.search('rabbits', str(cm.exception)) is not None
 
     def test_asset_spec_no_static_view(self):
         from webassets import Bundle
