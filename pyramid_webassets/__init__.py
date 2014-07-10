@@ -125,37 +125,34 @@ class PyramidResolver(Resolver):
     def resolve_output_to_url(self, ctx, item):
         request = get_current_request()
 
-        # Attempt to resolve the output item. First, resolve the item if its
-        # an asset spec. If it's a relative path, construct a url from the
-        # environment base url, which may be an asset spec that the base class
-        # cannot handle. Try to resolve this url and the item against the
-        # `static_url` method.
-        url = None
-        package, filepath = self._split_spec(item)
-        if package is None:
-            if not path.isabs(filepath):
-                item = path.join(ctx.directory, filepath)
-                url = path.join(ctx.url, filepath)
-        else:
-            pkgpath = self._resolve_spec(package + ':')
-            item = path.join(pkgpath, filepath)
+        if not path.isabs(item):
+            if ':' not in item:
+                if 'asset_base' in ctx.config:
+                    item = path.join(ctx.config['asset_base'], item)
+                else:
+                    item = path.join(ctx.directory, item)
 
-        if url is None:
-            if USING_WEBASSETS_CONTEXT:
-                url = super(PyramidResolver, self).resolve_output_to_url(
-                    ctx,
-                    item
-                )
-            else:
-                url = super(PyramidResolver, self).resolve_output_to_url(item)
-
-        for attempt in (url, item):
+        if ':' in item:
+            filepath = self._resolve_spec(item)
             try:
-                return request.static_url(attempt)
+                return request.static_url(filepath)
             except:
                 pass
+        else:
+            filepath = item
 
-        return url
+        try:
+            return request.static_url(item)
+        except:
+            pass
+
+        if USING_WEBASSETS_CONTEXT:
+            return super(PyramidResolver, self).resolve_output_to_url(
+                ctx,
+                filepath
+            )
+        else:
+            return super(PyramidResolver, self).resolve_output_to_url(filepath)
 
 
 class LegacyPyramidResolver(PyramidResolver):
@@ -234,9 +231,13 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
 
     if ':' in asset_dir:
         try:
-            asset_dir = AssetResolver(None).resolve(asset_dir).abspath()
+            resolved_dir = AssetResolver(None).resolve(asset_dir).abspath()
         except ImportError:
             pass
+        else:
+            # Store the original asset spec to use later
+            kwargs['asset_base'] = asset_dir
+            asset_dir = resolved_dir
 
     if 'debug' in kwargs:
         kwargs['debug'] = maybebool(kwargs['debug'])
