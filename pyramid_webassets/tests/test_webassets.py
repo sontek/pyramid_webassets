@@ -1,6 +1,7 @@
+import hashlib
 import unittest
 import os
-import hashlib
+import re
 
 from mock import Mock
 from pyramid import testing
@@ -544,7 +545,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         with self.assertRaises(BundleError) as cm:
             _urls(bundle, self.env)
 
-        assert str(cm.exception) == "No module named 'rabbits'"
+        assert re.match("No module named '?rabbits'?", str(cm.exception))
 
     def test_asset_spec_no_static_view(self):
         from webassets import Bundle
