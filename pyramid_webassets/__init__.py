@@ -29,7 +29,7 @@ def maybebool(value):
     returns the original value, whereas `asbool` returns False.
     '''
     if isinstance(value, six.string_types) and value.lower() in booly:
-        return asbool(value)
+        return asbool(value)  # pragma: no cover
     return value
 
 
@@ -63,7 +63,7 @@ class PyramidResolver(Resolver):
                     ctx,
                     item
                 )
-            else:
+            else:  # pragma: no cover
                 return super(PyramidResolver, self).search_for_source(
                     item
                 )
@@ -98,7 +98,7 @@ class PyramidResolver(Resolver):
                 filepath,
                 item
             )
-        else:
+        else:  # pragma: no cover
             return super(PyramidResolver, self).resolve_source_to_url(
                 filepath,
                 item
@@ -116,7 +116,7 @@ class PyramidResolver(Resolver):
                 target,
                 bundle
             )
-        else:
+        else:  # pragma: no cover
             return super(PyramidResolver, self).resolve_output_to_path(
                 target,
                 bundle
@@ -151,11 +151,11 @@ class PyramidResolver(Resolver):
                 ctx,
                 filepath
             )
-        else:
+        else:  # pragma: no cover
             return super(PyramidResolver, self).resolve_output_to_url(filepath)
 
 
-class LegacyPyramidResolver(PyramidResolver):
+class LegacyPyramidResolver(PyramidResolver):  # pragma: no cover
     def __init__(self, env):
         Resolver.__init__(self, env)
         self.resolver = AssetResolver(None)
@@ -178,7 +178,7 @@ class Environment(Environment):
     def resolver_class(self):
         if USING_WEBASSETS_CONTEXT:
             return PyramidResolver
-        else:
+        else:  # pragma: no cover
             return LegacyPyramidResolver
 
 
@@ -343,7 +343,7 @@ def assets(request, *args, **kwargs):
     if USING_WEBASSETS_CONTEXT:
         with bundle.bind(env):
             urls = bundle.urls()
-    else:
+    else:  # pragma: no cover
         urls = bundle.urls(env=env)
 
     return urls
