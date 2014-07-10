@@ -32,8 +32,9 @@ class TempDirHelper(WebassetsTempDirHelper):
             if pth.startswith(self.tempdir):
                 sys.path.remove(pth)
 
+        sys_modules_items = sys.modules.copy()
         # remove tempdir modules
-        for name, module in sys.modules.items():
+        for name, module in sys_modules_items.items():
             if module is not None:
                 if getattr(module, '__file__', '').startswith(self.tempdir):
                     del sys.modules[name]
@@ -121,7 +122,7 @@ class TestWebAssets(unittest.TestCase):
         with self.assertRaises(Exception) as cm:
             get_webassets_env_from_settings(settings)
 
-        assert cm.exception.message == "You need to provide webassets.base_dir in your configuration"
+        assert str(cm.exception) == "You need to provide webassets.base_dir in your configuration"
 
     def test_get_webassets_env_from_settings_no_base_dir(self):
         from pyramid_webassets import get_webassets_env_from_settings
@@ -131,7 +132,7 @@ class TestWebAssets(unittest.TestCase):
         with self.assertRaises(Exception) as cm:
             get_webassets_env_from_settings(settings)
 
-        assert cm.exception.message == "You need to provide webassets.base_dir in your configuration"
+        assert str(cm.exception) == "You need to provide webassets.base_dir in your configuration"
 
     def test_get_webassets_env_from_settings_no_base_url(self):
         from pyramid_webassets import get_webassets_env_from_settings
@@ -141,7 +142,7 @@ class TestWebAssets(unittest.TestCase):
         with self.assertRaises(Exception) as cm:
             get_webassets_env_from_settings(settings)
 
-        assert cm.exception.message == "You need to provide webassets.base_url in your configuration"
+        assert str(cm.exception) == "You need to provide webassets.base_url in your configuration"
 
     def test_get_webassets_env_from_settings_minimal(self):
         from pyramid_webassets import get_webassets_env_from_settings
@@ -330,7 +331,7 @@ class TestWebAssets(unittest.TestCase):
         with self.assertRaises(Exception) as cm:
             get_webassets_env_from_settings(settings, prefix='webassets')
 
-        assert cm.exception.message == "You need to provide webassets.base_dir in your configuration"
+        assert str(cm.exception) == "You need to provide webassets.base_dir in your configuration"
 
     def test_includeme(self):
         from pyramid_webassets import includeme
@@ -504,7 +505,8 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         assert urls == ['http://example.com/static/zung.css']
 
         fname = os.path.join(self.tempdir, 'static', 'assets', 'zung.css')
-        assert file(fname).read() == '* { text-decoration: underline }'
+        with open(fname) as f:
+            assert f.read() == '* { text-decoration: underline }'
 
     def test_asset_spec_output_is_resolved(self):
         from webassets import Bundle
@@ -516,7 +518,8 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         assert urls == ['http://example.com/static/zung.css']
 
         fname = os.path.join(self.tempdir, 'static', 'assets', 'zung.css')
-        assert file(fname).read() == '* { text-decoration: underline }'
+        with open(fname) as f:
+            assert f.read() == '* { text-decoration: underline }'
 
     def test_asset_spec_missing_file(self):
         from webassets import Bundle
@@ -529,7 +532,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
             _urls(bundle, self.env)
 
         fname = self.tempdir+'/static/assets/bogus.css'
-        assert str(cm.exception.message) == ("'%s' does not exist" % (fname,))
+        assert str(cm.exception) == ("'%s' does not exist" % (fname,))
 
     def test_asset_spec_missing_package(self):
         from webassets import Bundle
@@ -541,7 +544,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
         with self.assertRaises(BundleError) as cm:
             _urls(bundle, self.env)
 
-        assert cm.exception.args[0].message == 'No module named rabbits'
+        assert str(cm.exception) == "No module named 'rabbits'"
 
     def test_asset_spec_no_static_view(self):
         from webassets import Bundle
@@ -728,7 +731,7 @@ class TestBaseUrlBehavior(object):
             name = self.temp.tempdir + '/static/' + webasset
 
         if webassets_version > (0, 9):
-            hashed_filename = hashlib.md5(name).hexdigest()
+            hashed_filename = hashlib.md5(name.encode("utf-8")).hexdigest()
         else:
             hashed_filename = hash(name) & ((1 << 64) - 1)
         external = 'webassets-external/%s_' % hashed_filename
