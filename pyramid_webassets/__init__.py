@@ -89,7 +89,7 @@ class PyramidResolver(Resolver):
             for attempt in (filepath, item):
                 try:
                     return request.static_url(attempt)
-                except:
+                except ValueError:
                     pass
 
         if USING_WEBASSETS_CONTEXT:
@@ -136,14 +136,14 @@ class PyramidResolver(Resolver):
             filepath = self._resolve_spec(item)
             try:
                 return request.static_url(filepath)
-            except:
+            except ValueError:
                 pass
         else:
             filepath = item
 
         try:
             return request.static_url(item)
-        except:
+        except ValueError:
             pass
 
         if USING_WEBASSETS_CONTEXT:
