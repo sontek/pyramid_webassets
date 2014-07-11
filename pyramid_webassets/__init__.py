@@ -29,7 +29,7 @@ def maybebool(value):
     returns the original value, whereas `asbool` returns False.
     '''
     if isinstance(value, six.string_types) and value.lower() in booly:
-        return asbool(value)
+        return asbool(value)  # pragma: no cover
     return value
 
 
@@ -38,34 +38,48 @@ class PyramidResolver(Resolver):
         super(PyramidResolver, self).__init__()
         self.resolver = AssetResolver(None)
 
-    def _split_asset_spec(self, item):
+    def _split_spec(self, item):
         if ':' in item:
-            package, filepath = item.split(':', 1)
-            try:
-                package = self.resolver.resolve('%s:' % package).abspath()
-            except ImportError as e:
-                raise BundleError(e)
-            return (package, filepath)
+            package, subpath = item.split(':', 1)
+            return (package, subpath)
         else:
             return (None, item)
 
+    def _resolve_spec(self, spec):
+        package, subpath = self._split_spec(spec)
+
+        try:
+            pkgpath = self.resolver.resolve(package + ':').abspath()
+        except ImportError as e:
+            raise BundleError(e)
+        else:
+            return path.join(pkgpath, subpath)
+
     def search_for_source(self, ctx, item):
-        package, filepath = self._split_asset_spec(item)
+        package, subpath = self._split_spec(item)
         if package is None:
             if USING_WEBASSETS_CONTEXT:
                 return super(PyramidResolver, self).search_for_source(
                     ctx,
-                    filepath
+                    item
                 )
-            else:
+            else:  # pragma: no cover
                 return super(PyramidResolver, self).search_for_source(
-                    filepath
+                    item
                 )
         else:
-            return self.consider_single_directory(package, filepath)
+            pkgpath = self._resolve_spec(package + ':')
+            return self.consider_single_directory(pkgpath, subpath)
 
     def resolve_source_to_url(self, ctx, filepath, item):
         request = get_current_request()
+
+        # Use the filepath to reconstruct the item without globs
+        package, _ = self._split_spec(item)
+        if package is not None:
+            pkgdir = self._resolve_spec(package + ':')
+            if filepath.startswith(pkgdir):
+                item = '{}:{}'.format(package, filepath[len(pkgdir):])
 
         # Attempt to resolve the filepath as passed (but after versioning).
         # If this fails, it may be because the static route was registered
@@ -75,7 +89,7 @@ class PyramidResolver(Resolver):
             for attempt in (filepath, item):
                 try:
                     return request.static_url(attempt)
-                except:
+                except ValueError:
                     pass
 
         if USING_WEBASSETS_CONTEXT:
@@ -84,16 +98,17 @@ class PyramidResolver(Resolver):
                 filepath,
                 item
             )
-        else:
+        else:  # pragma: no cover
             return super(PyramidResolver, self).resolve_source_to_url(
                 filepath,
                 item
             )
 
     def resolve_output_to_path(self, ctx, target, bundle):
-        package, filepath = self._split_asset_spec(target)
+        package, filepath = self._split_spec(target)
         if package is not None:
-            target = path.join(package, filepath)
+            pkgpath = self._resolve_spec(package + ':')
+            target = path.join(pkgpath, filepath)
 
         if USING_WEBASSETS_CONTEXT:
             return super(PyramidResolver, self).resolve_output_to_path(
@@ -101,7 +116,7 @@ class PyramidResolver(Resolver):
                 target,
                 bundle
             )
-        else:
+        else:  # pragma: no cover
             return super(PyramidResolver, self).resolve_output_to_path(
                 target,
                 bundle
@@ -110,39 +125,37 @@ class PyramidResolver(Resolver):
     def resolve_output_to_url(self, ctx, item):
         request = get_current_request()
 
-        # Attempt to resolve the output item. First, resolve the item if its
-        # an asset spec. If it's a relative path, construct a url from the
-        # environment base url, which may be an asset spec that the base class
-        # cannot handle. Try to resolve this url and the item against the
-        # `static_url` method.
-        url = None
-        package, filepath = self._split_asset_spec(item)
-        if package is None:
-            if not path.isabs(filepath):
-                item = path.join(ctx.directory, filepath)
-                url = path.join(ctx.url, filepath)
-        else:
-            item = path.join(package, filepath)
+        if not path.isabs(item):
+            if ':' not in item:
+                if 'asset_base' in ctx.config:
+                    item = path.join(ctx.config['asset_base'], item)
+                else:
+                    item = path.join(ctx.directory, item)
 
-        if url is None:
-            if USING_WEBASSETS_CONTEXT:
-                url = super(PyramidResolver, self).resolve_output_to_url(
-                    ctx,
-                    item
-                )
-            else:
-                url = super(PyramidResolver, self).resolve_output_to_url(item)
-
-        for attempt in (url, item):
+        if ':' in item:
+            filepath = self._resolve_spec(item)
             try:
-                return request.static_url(attempt)
-            except:
+                return request.static_url(filepath)
+            except ValueError:
                 pass
+        else:
+            filepath = item
 
-        return url
+        try:
+            return request.static_url(item)
+        except ValueError:
+            pass
+
+        if USING_WEBASSETS_CONTEXT:
+            return super(PyramidResolver, self).resolve_output_to_url(
+                ctx,
+                filepath
+            )
+        else:  # pragma: no cover
+            return super(PyramidResolver, self).resolve_output_to_url(filepath)
 
 
-class LegacyPyramidResolver(PyramidResolver):
+class LegacyPyramidResolver(PyramidResolver):  # pragma: no cover
     def __init__(self, env):
         Resolver.__init__(self, env)
         self.resolver = AssetResolver(None)
@@ -165,7 +178,7 @@ class Environment(Environment):
     def resolver_class(self):
         if USING_WEBASSETS_CONTEXT:
             return PyramidResolver
-        else:
+        else:  # pragma: no cover
             return LegacyPyramidResolver
 
 
@@ -218,9 +231,13 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
 
     if ':' in asset_dir:
         try:
-            asset_dir = AssetResolver(None).resolve(asset_dir).abspath()
+            resolved_dir = AssetResolver(None).resolve(asset_dir).abspath()
         except ImportError:
             pass
+        else:
+            # Store the original asset spec to use later
+            kwargs['asset_base'] = asset_dir
+            asset_dir = resolved_dir
 
     if 'debug' in kwargs:
         kwargs['debug'] = maybebool(kwargs['debug'])
@@ -326,7 +343,7 @@ def assets(request, *args, **kwargs):
     if USING_WEBASSETS_CONTEXT:
         with bundle.bind(env):
             urls = bundle.urls()
-    else:
+    else:  # pragma: no cover
         urls = bundle.urls(env=env)
 
     return urls
@@ -339,7 +356,8 @@ def add_assets_global(event):
 def includeme(config):
     config.add_subscriber(add_assets_global, 'pyramid.events.BeforeRender')
 
-    assets_env = get_webassets_env_from_settings(config.registry.settings)
+    settings = config.registry.settings
+    assets_env = get_webassets_env_from_settings(settings)
 
     config.registry.registerUtility(assets_env, IWebAssetsEnvironment)
 
@@ -350,8 +368,13 @@ def includeme(config):
 
     if assets_env.config['static_view']:
         config.add_static_view(
-            assets_env.url,
-            assets_env.directory,
+            settings['webassets.base_url'],
+            settings['webassets.base_dir'],
+            cache_max_age=assets_env.config['cache_max_age']
+        )
+        config.add_static_view(
+            path.join(assets_env.url, 'webassets-external'),
+            path.join(assets_env.directory, 'webassets-external'),
             cache_max_age=assets_env.config['cache_max_age']
         )
 
