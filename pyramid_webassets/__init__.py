@@ -134,17 +134,15 @@ class PyramidResolver(Resolver):
 
         if ':' in item:
             filepath = self._resolve_spec(item)
-            try:
-                return request.static_url(filepath)
-            except ValueError:
-                pass
         else:
             filepath = item
 
-        try:
-            return request.static_url(item)
-        except ValueError:
-            pass
+        if request is not None:
+            for attempt in (filepath, item):
+                try:
+                    return request.static_url(item)
+                except ValueError:
+                    pass
 
         if USING_WEBASSETS_CONTEXT:
             return super(PyramidResolver, self).resolve_output_to_url(
