@@ -776,7 +776,13 @@ class TestBaseUrlBehavior(object):
 
          # Work a bit the resolve output (o.css will activate the output=o.css)
          ('mypkg:static', 'manual', 'mypkg:static/t.css',
-          'http://example.com/static/o.css')],
+          'http://example.com/static/o.css'),
+
+         # Test the string joins when using a package root as the asset spec
+         # The expected output is relative until/unless Pyramid merges
+         # https://github.com/Pylons/pyramid/pull/1377
+         # As such, this is not really a recommended setup.
+         ('mypkg:', 'automatic', 'mypkg:static/t.css', '/static/o.css')],
     )
     def test_url(self, base_dir, static_view, webasset, expected):
         """
