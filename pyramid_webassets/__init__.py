@@ -128,7 +128,10 @@ class PyramidResolver(Resolver):
         if not path.isabs(item):
             if ':' not in item:
                 if 'asset_base' in ctx.config:
-                    item = path.join(ctx.config['asset_base'], item)
+                    if ctx.config['asset_base'].endswith(':'):
+                        item = ctx.config['asset_base'] + item
+                    else:
+                        item = path.join(ctx.config['asset_base'], item)
                 else:
                     item = path.join(ctx.directory, item)
 
