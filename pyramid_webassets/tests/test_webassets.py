@@ -128,7 +128,7 @@ class TestWebAssets(unittest.TestCase):
     def test_get_webassets_env_from_settings_no_base_dir(self):
         from pyramid_webassets import get_webassets_env_from_settings
 
-        settings = {'webassets.base_url': '/static'}
+        settings = {'webassets.base_url': 'static'}
 
         with self.assertRaises(Exception) as cm:
             get_webassets_env_from_settings(settings)
@@ -149,14 +149,14 @@ class TestWebAssets(unittest.TestCase):
         from pyramid_webassets import get_webassets_env_from_settings
 
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': os.getcwd(),
         }
 
         env = get_webassets_env_from_settings(settings)
 
         assert env.directory == settings['webassets.base_dir']
-        assert env.url == settings['webassets.base_url']
+        assert env.url == '/' + settings['webassets.base_url']
         self.assertEqual(env.url_mapping, {})
         self.assertEqual(env.load_path, [])
 
@@ -165,7 +165,7 @@ class TestWebAssets(unittest.TestCase):
         from pyramid_webassets import get_webassets_env_from_settings
 
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': 'pyramid_webassets:static',
         }
 
@@ -179,7 +179,7 @@ class TestWebAssets(unittest.TestCase):
         from pyramid_webassets import get_webassets_env_from_settings
 
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': 'here:static',
         }
 
@@ -192,7 +192,7 @@ class TestWebAssets(unittest.TestCase):
         from pyramid_webassets import get_webassets_env_from_settings
 
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': os.getcwd(),
             'webassets.paths': '{"/path/to/scripts": "/js", "/path/to/styles": "/css"}',
         }
@@ -200,7 +200,7 @@ class TestWebAssets(unittest.TestCase):
         env = get_webassets_env_from_settings(settings)
 
         assert env.directory == settings['webassets.base_dir']
-        assert env.url == settings['webassets.base_url']
+        assert env.url == '/' + settings['webassets.base_url']
         self.assertEqual(env.url_mapping, {
             '/path/to/scripts': '/js',
             '/path/to/styles':  '/css',
@@ -214,7 +214,7 @@ class TestWebAssets(unittest.TestCase):
         from pyramid_webassets import get_webassets_env_from_settings
 
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': os.getcwd(),
             'webassets.paths': '{"/path/to/scripts": null, "/path/to/styles": "/css"}',
         }
@@ -222,7 +222,7 @@ class TestWebAssets(unittest.TestCase):
         env = get_webassets_env_from_settings(settings)
 
         assert env.directory == settings['webassets.base_dir']
-        assert env.url == settings['webassets.base_url']
+        assert env.url == '/' + settings['webassets.base_url']
         self.assertEqual(env.url_mapping, {
             '/path/to/styles':  '/css',
             })
@@ -235,7 +235,7 @@ class TestWebAssets(unittest.TestCase):
         from pyramid_webassets import get_webassets_env_from_settings
 
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': os.getcwd(),
             'webassets.auto_build': 'false'
         }
@@ -243,7 +243,7 @@ class TestWebAssets(unittest.TestCase):
         env = get_webassets_env_from_settings(settings)
 
         assert env.directory == settings['webassets.base_dir']
-        assert env.url == settings['webassets.base_url']
+        assert env.url == '/' + settings['webassets.base_url']
         assert env.auto_build is False
 
     def test_get_webassets_env_from_settings_complete(self):
@@ -251,7 +251,7 @@ class TestWebAssets(unittest.TestCase):
         import webassets
 
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': os.getcwd(),
             'webassets.debug': 'true',
             'webassets.cache': 'false',
@@ -263,7 +263,7 @@ class TestWebAssets(unittest.TestCase):
         env = get_webassets_env_from_settings(settings)
 
         assert env.directory == settings['webassets.base_dir']
-        assert env.url == settings['webassets.base_url']
+        assert env.url == '/' + settings['webassets.base_url']
         assert env.debug is True
         assert isinstance(env.updater, webassets.updater.AlwaysUpdater)
         assert env.config['JST_COMPILER'] == settings['webassets.jst_compiler']
@@ -275,7 +275,7 @@ class TestWebAssets(unittest.TestCase):
         from pyramid_webassets import get_webassets_env_from_settings
 
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': os.getcwd(),
             'webassets.cache': 'true',
         }
@@ -292,7 +292,7 @@ class TestWebAssets(unittest.TestCase):
         tmpdir = os.path.join(os.getcwd(), 'test-cache-dir-' + str(uuid4()))
 
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': os.getcwd(),
             'webassets.cache': tmpdir,
         }
@@ -311,7 +311,7 @@ class TestWebAssets(unittest.TestCase):
         from pyramid_webassets import get_webassets_env_from_settings
 
         settings = {
-            'foo.base_url': '/static',
+            'foo.base_url': 'static',
             'foo.base_dir': os.getcwd(),
         }
 
@@ -319,13 +319,13 @@ class TestWebAssets(unittest.TestCase):
 
         assert env is not None
         assert env.directory == settings['foo.base_dir']
-        assert env.url == settings['foo.base_url']
+        assert env.url == '/' + settings['foo.base_url']
 
     def test_get_webassets_env_from_settings_prefix_bad_change(self):
         from pyramid_webassets import get_webassets_env_from_settings
 
         settings = {
-            'foo.base_url': '/static',
+            'foo.base_url': 'static',
             'foo.base_dir': os.getcwd(),
         }
 
@@ -352,7 +352,7 @@ class TestWebAssets(unittest.TestCase):
         config.set_request_property = set_request_property
 
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': os.getcwd(),
         }
 
@@ -389,7 +389,7 @@ class TestWebAssets(unittest.TestCase):
         from pyramid_webassets import get_webassets_env_from_settings
 
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': os.getcwd(),
             'webassets.static_view': True,
         }
@@ -403,7 +403,7 @@ class TestWebAssets(unittest.TestCase):
         from pyramid_webassets import get_webassets_env_from_settings
 
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': os.getcwd(),
             'webassets.static_view': True,
             'webassets.cache_max_age': 3600,
@@ -419,7 +419,7 @@ class TestWebAssets(unittest.TestCase):
         from pyramid_webassets import get_webassets_env_from_settings
 
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': os.getcwd(),
             'webassets.load_path': '/foo bar/\nbaz'
         }
@@ -431,7 +431,7 @@ class TestWebAssets(unittest.TestCase):
     def test_auto_bool(self):
         from pyramid_webassets import get_webassets_env_from_settings
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': os.getcwd(),
             'webassets.less_run_in_debug': 'true',
         }
@@ -441,7 +441,7 @@ class TestWebAssets(unittest.TestCase):
     def test_auto_json(self):
         from pyramid_webassets import get_webassets_env_from_settings
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': os.getcwd(),
             'webassets.less_extra_args': 'json:["--foo", "--bar"]',
         }
@@ -466,7 +466,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
 
         self.request = testing.DummyRequest()
         self.config = testing.setUp(request=self.request, settings={
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': 'static:assets',
             'webassets.static_view': True,
         })
@@ -618,7 +618,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
             raise unittest.SkipTest('PyYAML not installed')
         from pyramid_webassets import get_webassets_env_from_settings
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': os.getcwd(),
             'webassets.bundles': self.tempdir + '/foo/bar.yaml',
         }
@@ -635,7 +635,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
             raise unittest.SkipTest('PyYAML not installed')
         from pyramid_webassets import get_webassets_env_from_settings
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': os.getcwd(),
             'webassets.bundles': 'dotted.package.name:foo/bar.yaml '
                                  'dotted.package.name:foo/baz.yaml',
@@ -659,7 +659,7 @@ class TestAssetSpecs(TempDirHelper, unittest.TestCase):
             raise unittest.SkipTest('PyYAML not installed')
         from pyramid_webassets import get_webassets_env_from_settings
         settings = {
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': os.getcwd(),
             'webassets.bundles': (
                 'dotted.package.name:foo/bar.yaml\n'
@@ -720,7 +720,7 @@ class TestBaseUrlBehavior(object):
 
         self.request = testing.DummyRequest()
         self.config = testing.setUp(request=self.request, settings={
-            'webassets.base_url': '/static',
+            'webassets.base_url': 'static',
             'webassets.base_dir': base_dir,
             'webassets.static_view': automatic_view,
             'webassets.url_expire': False,

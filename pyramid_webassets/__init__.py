@@ -240,6 +240,10 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
             kwargs['asset_base'] = asset_dir
             asset_dir = resolved_dir
 
+    if not asset_url.startswith('/'):
+        if six.moves.urllib.parse.urlparse(asset_url).scheme == '':
+            asset_url = '/' + asset_url
+
     if 'debug' in kwargs:
         kwargs['debug'] = maybebool(kwargs['debug'])
 

@@ -43,7 +43,7 @@ but we currently support:
 
 ``` ini
 webassets.base_dir              = %(here)s/app/static
-webassets.base_url              = /static
+webassets.base_url              = static
 webassets.debug                 = True
 webassets.updater               = timestamp
 webassets.cache                 = False
@@ -93,7 +93,7 @@ If you have defined your own static route and you want to use it with webassets,
 for example:
 
 ``` python
-config.add_static_view('/static-stuff', 'my.super.app:static')
+config.add_static_view('static-stuff', 'my.super.app:static')
 ```
 
 Setting the base url configuration option to an asset specification:
