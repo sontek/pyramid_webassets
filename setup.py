@@ -2,7 +2,8 @@
 
 import os
 
-from setuptools import setup, find_packages, Command
+from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -20,19 +21,23 @@ extras_require = {
 }
 
 
-class PyTest(Command):
-    user_options = []
+class PyTest(TestCommand):
+    user_options = [('tox-args=', 'a', "Arguments to pass to tox")]
 
     def initialize_options(self):
-        pass
+        TestCommand.initialize_options(self)
+        self.tox_args = None
 
     def finalize_options(self):
-        pass
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
 
-    def run(self):
-        import subprocess
-        errno = subprocess.call('py.test')
-        raise SystemExit(errno)
+    def run_tests(self):
+        import tox
+        import shlex
+        errno = tox.cmdline(args=shlex.split(self.tox_args))
+        sys.exit(errno)
 
 setup(name='pyramid_webassets',
       version='0.8',
@@ -55,6 +60,6 @@ setup(name='pyramid_webassets',
       test_suite='pyramid_webassets',
       install_requires=requires,
       extras_require=extras_require,
-      tests_require=['pytest', 'mock'],
+      tests_require=['tox'],
       cmdclass={'test': PyTest},
       )

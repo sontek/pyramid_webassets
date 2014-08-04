@@ -1,9 +1,31 @@
 language: python
-python:
-  - "2.7"
-  - "3.3"
-  - "3.4"
-# command to install dependencies
-install: "pip install -r requirements.txt"
-# command to run tests
-script: python setup.py test
+matrix:
+  include:
+    - python: "pypy"
+      env: TOX_ENV=pypy-webassets08
+    - python: "pypy"
+      env: TOX_ENV=pypy-webassets09
+    - python: "pypy"
+      env: TOX_ENV=pypy-webassets10
+    - python: "3.4"
+      env: TOX_ENV=py34-webassets09
+    - python: "3.4"
+      env: TOX_ENV=py34-webassets10
+    - python: "3.3"
+      env: TOX_ENV=py33-webassets09
+    - python: "3.3"
+      env: TOX_ENV=py33-webassets10
+    - python: "2.7"
+      env: TOX_ENV=py27-webassets08
+    - python: "2.7"
+      env: TOX_ENV=py27-webassets09
+    - python: "2.7"
+      env: TOX_ENV=py27-webassets10
+    - env: TOX_ENV=cover
+install:
+  - if [ x$TOX_ENV == "xcover" ]; then pip install coveralls; fi
+  - pip install tox
+script:
+  - tox -e $TOX_ENV
+after_success:
+  - if [ x$TOX_ENV == "xcover" ]; then coveralls; fi
