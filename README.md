@@ -1,6 +1,8 @@
 Installation
 ===================
 
+[![Build Status](https://travis-ci.org/sontek/pyramid_webassets.svg?branch=master)](https://travis-ci.org/sontek/pyramid_webassets)
+
 Install the package:
 
 ``` bash
