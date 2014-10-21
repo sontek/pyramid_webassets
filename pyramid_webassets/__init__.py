@@ -1,5 +1,6 @@
 from contextlib import closing
 from os import path, makedirs
+import fileinput
 import json
 import six
 
@@ -31,6 +32,13 @@ def maybebool(value):
     if isinstance(value, six.string_types) and value.lower() in booly:
         return asbool(value)  # pragma: no cover
     return value
+
+
+def text(value):
+    if type(value) is six.binary_type:
+        return value.decode('utf-8')
+    else:
+        return value
 
 
 class PyramidResolver(Resolver):
@@ -299,19 +307,21 @@ def get_webassets_env_from_settings(settings, prefix='webassets'):
         for map_path, map_url in json.loads(paths).items():
             assets_env.append_path(map_path, map_url)
 
-    def yaml_stream(fname):
+    def yaml_stream(fname, mode):
         if path.exists(fname):
-            return open(fname, 'rb')
+            return open(fname, mode)
         else:
             return assets_env.resolver.resolver.resolve(fname).stream()
 
     if isinstance(bundles, list):
-        loaded = {}
-        for bpath in reversed(bundles):
-            with closing(yaml_stream(bpath)) as s:
-                loader = YAMLLoader(s)
-                loaded.update(loader.load_bundles())
-        assets_env.register(loaded)
+        fnames = reversed(bundles)
+        fin = fileinput.input(fnames, openhook=yaml_stream)
+        with closing(fin):
+            lines = [text(line).rstrip() for line in fin]
+        yamlin = six.StringIO('\n'.join(lines))
+        loader = YAMLLoader(yamlin)
+        result = loader.load_bundles()
+        assets_env.register(result)
     elif isinstance(bundles, dict):
         assets_env.register(bundles)
 
