@@ -1,31 +1,22 @@
 language: python
-matrix:
-  include:
-    - python: "pypy"
-      env: TOX_ENV=pypy-webassets08
-    - python: "pypy"
-      env: TOX_ENV=pypy-webassets09
-    - python: "pypy"
-      env: TOX_ENV=pypy-webassets10
-    - python: "3.4"
-      env: TOX_ENV=py34-webassets09
-    - python: "3.4"
-      env: TOX_ENV=py34-webassets10
-    - python: "3.3"
-      env: TOX_ENV=py33-webassets09
-    - python: "3.3"
-      env: TOX_ENV=py33-webassets10
-    - python: "2.7"
-      env: TOX_ENV=py27-webassets08
-    - python: "2.7"
-      env: TOX_ENV=py27-webassets09
-    - python: "2.7"
-      env: TOX_ENV=py27-webassets10
-    - env: TOX_ENV=cover
+env:
+  - TOXENV=py27-webassets08
+  - TOXENV=py27-webassets09
+  - TOXENV=py27-webassets10
+  - TOXENV=pypy-webassets08
+  - TOXENV=pypy-webassets09
+  - TOXENV=pypy-webassets10
+  - TOXENV=py33-webassets09
+  - TOXENV=py33-webassets10
+  - TOXENV=py34-webassets09
+  - TOXENV=py34-webassets10
+  - TOXENV=pypy3-webassets09
+  - TOXENV=pypy3-webassets10
+  - TOXENV=coverage
 install:
-  - if [ x$TOX_ENV == "xcover" ]; then pip install coveralls; fi
+  - if [ x$TOXENV == "xcoverage" ]; then pip install coveralls; fi
   - pip install tox
 script:
-  - tox -e $TOX_ENV
+  - tox
 after_success:
-  - if [ x$TOX_ENV == "xcover" ]; then coveralls; fi
+  - if [ x$TOXENV == "xcoverage" ]; then coveralls; fi

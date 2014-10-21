@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import sys
 
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
@@ -13,7 +14,6 @@ with open(os.path.join(here, 'README.md')) as fp:
 with open(os.path.join(here, 'CHANGES.txt')) as fp:
     CHANGES = fp.read()
 
-#requires = open('requirements.txt').readlines()
 requires = ['pyramid>=1.3', 'webassets>=0.8', 'zope.interface', 'six>=1.4.1']
 
 extras_require = {
@@ -22,21 +22,24 @@ extras_require = {
 
 
 class PyTest(TestCommand):
-    user_options = [('tox-args=', 'a', "Arguments to pass to tox")]
+    user_options = [
+        ('cov', None, "measure coverage")
+    ]
 
     def initialize_options(self):
         TestCommand.initialize_options(self)
-        self.tox_args = None
+        self.cov = None
 
     def finalize_options(self):
         TestCommand.finalize_options(self)
-        self.test_args = []
+        self.test_args = ['pyramid_webassets/tests']
+        if self.cov:
+            self.test_args += ['--cov', 'pyramid_webassets']
         self.test_suite = True
 
     def run_tests(self):
-        import tox
-        import shlex
-        errno = tox.cmdline(args=shlex.split(self.tox_args))
+        import pytest
+        errno = pytest.main(self.test_args)
         sys.exit(errno)
 
 setup(name='pyramid_webassets',
@@ -60,6 +63,6 @@ setup(name='pyramid_webassets',
       test_suite='pyramid_webassets',
       install_requires=requires,
       extras_require=extras_require,
-      tests_require=['tox'],
+      tests_require=['pytest', 'pytest-cov'],
       cmdclass={'test': PyTest},
       )
