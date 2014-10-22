@@ -1,3 +1,15 @@
+0.9 (2014-10-21)
+================
+
+Features
+--------
+
+- Support for overriding named bundles when using the ``webassets.bundles``
+  setting. Files earlier in the list take precedence and can override named
+  bundles defined in later files. Combined with asset specifications for the
+  file names this makes it easy to extend the bundle configuration of other
+  packages.
+
 0.8 (2014-08-04)
 ================
 
