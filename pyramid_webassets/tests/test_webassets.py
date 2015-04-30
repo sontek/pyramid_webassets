@@ -793,7 +793,7 @@ class TestBaseUrlBehavior(object):
         from webassets import Bundle
 
         expected = self.format_expected(expected, webasset)
-        params = {} if not 'o.css' in expected else {'output': 'o.css'}
+        params = {} if 'o.css' not in expected else {'output': 'o.css'}
         bundle = Bundle(webasset, **params)
         res = _urls(bundle, self.build_env(base_dir, static_view))
         assert [expected] == res
