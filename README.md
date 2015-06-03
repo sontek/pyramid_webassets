@@ -193,6 +193,6 @@ import pyramid.paster
 import webassets.script
 
 app_env = pyramid.paster.bootstrap('config.ini')
-assets_env = app_env['request'].webasset_env
+assets_env = app_env['request'].webassets_env
 webassets.script.main(['build'], assets_env)
 ```
