@@ -715,7 +715,7 @@ class TestBaseUrlBehavior(object):
 
         automatic_view, manual_view = self.view_actions[static_view]
 
-        if not ':' in base_dir:
+        if ':' not in base_dir:
             base_dir = os.path.join(self.temp.tempdir, base_dir)
 
         self.request = testing.DummyRequest()
