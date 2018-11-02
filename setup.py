@@ -14,7 +14,7 @@ with open(os.path.join(here, 'README.md')) as fp:
 with open(os.path.join(here, 'CHANGES.txt')) as fp:
     CHANGES = fp.read()
 
-requires = ['pyramid>=1.3', 'webassets>=0.8', 'zope.interface', 'six>=1.4.1']
+requires = ['pyramid>=1.4', 'webassets>=0.8', 'zope.interface', 'six>=1.4.1']
 
 extras_require = {
     'bundles-yaml': 'PyYAML>=3.10',
