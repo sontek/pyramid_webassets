@@ -344,12 +344,12 @@ class TestWebAssets(unittest.TestCase):
         config = Mock()
         add_directive = Mock()
         registerUtility = Mock()
-        set_request_property = Mock()
+        add_request_method = Mock()
 
         config.registry = Mock()
         config.registry.registerUtility = registerUtility
         config.add_directive = add_directive
-        config.set_request_property = set_request_property
+        config.add_request_method = add_request_method
 
         settings = {
             'webassets.base_url': 'static',
@@ -368,7 +368,7 @@ class TestWebAssets(unittest.TestCase):
         assert add_directive.call_args_list[1][0] == expected2
         assert add_directive.call_args_list[2][0] == expected3
 
-        assert set_request_property.call_args_list[0][0] == \
+        assert add_request_method.call_args_list[0][0] == \
             (get_webassets_env_from_request, 'webassets_env')
 
     def test_get_webassets_env_from_request(self):

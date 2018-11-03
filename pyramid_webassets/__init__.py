@@ -393,6 +393,6 @@ def includeme(config):
             cache_max_age=assets_env.config['cache_max_age']
         )
 
-    config.set_request_property(get_webassets_env_from_request,
-                                'webassets_env', reify=True)
-    config.set_request_property(assets, 'webassets', reify=True)
+    config.add_request_method(get_webassets_env_from_request,
+                              'webassets_env', reify=True)
+    config.add_request_method(assets, 'webassets', reify=True)
